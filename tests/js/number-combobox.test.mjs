@@ -24,13 +24,13 @@ test("Down navigates 1 then 2 and Enter selects without submitting", (t) => {
 
 test("typed input, Escape, Tab, boundaries and reset preserve normal editing", (t) => {
   const { input, list, key, type } = setup(t);
-  type("39"); assert.equal(input.checkValidity(), true);
-  key("ArrowDown"); key("ArrowDown"); key("Escape"); assert.equal(input.value, "39");
-  key("ArrowDown"); key("ArrowDown"); key("ArrowDown"); key("Tab"); assert.equal(input.value, "40");
+  type("19"); assert.equal(input.checkValidity(), true);
+  key("ArrowDown"); key("ArrowDown"); key("Escape"); assert.equal(input.value, "19");
+  key("ArrowDown"); key("ArrowDown"); key("ArrowDown"); key("Tab"); assert.equal(input.value, "20");
   type("1"); key("ArrowUp"); key("ArrowUp"); key("Enter"); assert.equal(input.value, "1");
-  type("41"); assert.equal(input.checkValidity(), false);
+  type("21"); assert.equal(input.checkValidity(), false);
   type("2e1"); assert.equal(input.checkValidity(), false);
-  type("20"); assert.equal(input.checkValidity(), true);
+  type("15"); assert.equal(input.checkValidity(), true);
   assert.equal(key("ArrowLeft"), true);
   key("ArrowDown"); input.form.reset(); assert.equal(list.hidden, true); assert.equal(input.value, "");
   assert.equal(input.validity.customError, false);
@@ -38,27 +38,27 @@ test("typed input, Escape, Tab, boundaries and reset preserve normal editing", (
 
 test("pointer selection picks the number and keeps focus in the editable combobox", (t) => {
   const { input, list, dom } = setup(t);
-  input.click(); list.children[38].click();
-  assert.equal(input.value, "39"); assert.equal(list.hidden, true);
+  input.click(); list.children[18].click();
+  assert.equal(input.value, "19"); assert.equal(list.hidden, true);
   assert.equal(dom.window.document.activeElement, input);
 });
 
 test("Home and End navigate the open list while preserving closed-list text editing", (t) => {
   const { input, list, key, type, dom } = setup(t);
-  type("23");
+  type("13");
   assert.equal(key("Home"), true);
   assert.equal(key("End"), true);
   assert.equal(list.hidden, true);
   key("ArrowDown");
   assert.equal(key("End"), false);
-  assert.equal(input.getAttribute("aria-activedescendant"), "options-40");
-  assert.equal(input.value, "23");
-  assert.equal(list.querySelector('[aria-selected="true"]').textContent, "40");
+  assert.equal(input.getAttribute("aria-activedescendant"), "options-20");
+  assert.equal(input.value, "13");
+  assert.equal(list.querySelector('[aria-selected="true"]').textContent, "20");
   assert.equal(dom.window.document.activeElement, input);
   key("Escape");
-  assert.equal(input.value, "23");
+  assert.equal(input.value, "13");
   key("ArrowDown"); key("End"); key("Enter");
-  assert.equal(input.value, "40");
+  assert.equal(input.value, "20");
   assert.equal(list.hidden, true);
   key("ArrowDown");
   assert.equal(key("Home"), false);

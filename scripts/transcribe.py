@@ -33,7 +33,7 @@ def call_scribe(wav: Path) -> dict:
     for attempt in range(3):
         with open(wav, "rb") as f:
             r = requests.post(URL, headers={"xi-api-key": key},
-                              data={"model_id": "scribe_v1", "language_code": "en",
+                              data={"model_id": "scribe_v1", "language_code": "fr",
                                     "timestamps_granularity": "word", "diarize": "false",
                                     "tag_audio_events": "false"},
                               files={"file": (wav.name, f, "audio/wav")}, timeout=300)

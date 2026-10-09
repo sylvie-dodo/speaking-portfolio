@@ -3,24 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>영어 말하기 녹음</title>
+<title>프랑스어 말하기 녹음</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap">
 <link rel="stylesheet" href="styles.css?v=assessment-flow">
 </head>
 <body>
-<header><h1>3학년 영어B 말하기 포트폴리오</h1><button type="button" id="btn-exit" hidden>퇴장하기</button></header>
+<header><h1>한국외국어대학교 프랑스어교육과 말하기 포트폴리오</h1><button type="button" id="btn-exit" hidden>퇴장하기</button></header>
 <main id="main">
   <div id="live" aria-live="polite" class="live"></div>
 
   <section id="screen-entry" class="screen">
     <h2 tabindex="-1">입장</h2>
     <form id="entry-form">
-      <p><label>반 <select name="cls" required>
-        <option value="">반 선택</option>
-        <option value="1">1반</option><option value="2">2반</option>
-        <option value="3">3반</option><option value="4">4반</option>
-        <option value="5">5반</option><option value="6">6반</option>
-      </select></label></p>
+      <input type="hidden" name="cls" value="1">
       <div class="number-field">
         <label for="student-number" id="number-label">번호</label>
         <input type="text" id="student-number" name="num" inputmode="numeric" autocomplete="off"

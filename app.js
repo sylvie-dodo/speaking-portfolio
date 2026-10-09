@@ -29,7 +29,7 @@ const normName = (s) => s.replace(/[\s　]/g, "");
 const fmt = (sec) => `${sec.toFixed(1)}초`;
 let entryBusy = false;
 const closedMessage = "지금은 이 반의 입장이 닫혀 있습니다. 선생님이 열어 주면 모의 평가와 본 평가에 참여할 수 있습니다.";
-const entryMessage = (r) => r.reason === "class_closed" ? closedMessage : "명렬에 없습니다. 반, 번호, 이름을 확인하세요.";
+const entryMessage = (r) => r.reason === "class_closed" ? closedMessage : "명렬에 없습니다. 번호와 이름을 확인하세요.";
 
 function updateParticipation(result) {
   state.examSubmitted = !!result.submitted;
@@ -117,11 +117,11 @@ async function chooseMode(mode, button = $(mode === "exam" ? "btn-exam" : "btn-p
     state.built = null;
     $("btn-mic-next").disabled = true;
     if (mode === "exam") {
-      const [a, b] = await drawExam(state.cls, state.num);
+      const [a, b] = await drawExam(state.cls, state.num, DIALOGUES.length);
       if (version !== sessionVersion) return;
       state.dialogues = [DIALOGUES[a], DIALOGUES[b]];
     } else {
-      state.dialogues = [DIALOGUES[drawPractice()]];
+      state.dialogues = [DIALOGUES[drawPractice(DIALOGUES.length)]];
     }
     showScreen("screen-mic");
   } catch (err) {
@@ -267,7 +267,7 @@ function renderUnits() {
     text.className = "dialogue-text";
     text.dataset.speaker = u.speaker;
     text.textContent = u.text;
-    text.lang = "en";
+    text.lang = "fr";
     const mk = (label, action, disabled) => {
       const b = document.createElement("button");
       b.type = "button"; b.textContent = label; b.dataset.action = action; b.disabled = disabled;

@@ -1,77 +1,79 @@
-"""전사 결과를 대본과 정렬해 표현별 만족 여부와 점수를 계산한다."""
+"""프랑스어 전사 결과를 대본과 정렬해 표현별 만족 여부와 점수를 계산한다."""
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 DEFAULT_CFG = json.loads((Path(__file__).with_name("scoring.json")).read_text(encoding="utf-8"))
 
-ONES = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
-        "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
-TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
-ORDINAL = {"1": "first", "2": "second", "3": "third", "5": "fifth", "8": "eighth", "9": "ninth", "12": "twelfth"}
-CONTRACTIONS = {("i", "am"): "i'm", ("it", "is"): "it's", ("he", "is"): "he's", ("she", "is"): "she's",
-                ("that", "is"): "that's", ("what", "is"): "what's", ("let", "us"): "let's", ("i", "have"): "i've",
-                ("i", "will"): "i'll", ("i", "would"): "i'd", ("you", "are"): "you're", ("do", "not"): "don't",
-                ("does", "not"): "doesn't", ("can", "not"): "can't", ("is", "not"): "isn't", ("i", "had"): "i'd"}
+UNITS = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze",
+         "treize", "quatorze", "quinze", "seize"]
+TENS = {2: "vingt", 3: "trente", 4: "quarante", 5: "cinquante", 6: "soixante"}
+# 복수형·이형을 한 형태로 맞춘다(quatre-vingts → vingt, deux cents → cent).
+SAME = {"vingts": "vingt", "cents": "cent"}
+
+
+def _below_100(n: int) -> list[str]:
+    if n < 17:
+        return [UNITS[n]]
+    if n < 20:
+        return ["dix", UNITS[n - 10]]
+    if n < 70:
+        tens, r = TENS[n // 10], n % 10
+        return [tens] if r == 0 else [tens, "et", "un"] if r == 1 else [tens, UNITS[r]]
+    if n < 80:  # 71 → soixante et onze, 75 → soixante quinze
+        return ["soixante", "et", "onze"] if n == 71 else ["soixante"] + _below_100(n - 60)
+    return ["quatre", "vingt"] + (_below_100(n - 80) if n > 80 else [])
 
 
 def num_words(n: int) -> list[str]:
-    if n < 20:
-        return [ONES[n]]
+    """프랑스어 기수. 하이픈은 쓰지 않는다(canonical이 하이픈을 공백으로 나누므로)."""
     if n < 100:
-        return [TENS[n // 10]] + ([ONES[n % 10]] if n % 10 else [])
+        return _below_100(n)
     if n < 1000:
-        return [ONES[n // 100], "hundred"] + (num_words(n % 100) if n % 100 else [])
-    if 1100 <= n < 2000 and n % 100:  # 1995 → nineteen ninety five
-        return num_words(n // 100) + num_words(n % 100)
-    if n < 10000:
-        return num_words(n // 1000) + ["thousand"] + (num_words(n % 1000) if n % 1000 else [])
+        h, r = divmod(n, 100)
+        return (["cent"] if h == 1 else [UNITS[h], "cent"]) + (_below_100(r) if r else [])
+    if n < 1_000_000:  # 1995 → mille neuf cent quatre vingt quinze
+        th, r = divmod(n, 1000)
+        return (["mille"] if th == 1 else num_words(th) + ["mille"]) + (num_words(r) if r else [])
     return [str(n)]
 
 
-def ordinal_words(n: str) -> list[str]:
-    if n in ORDINAL:
-        return [ORDINAL[n]]
-    w = num_words(int(n))
+def ordinal_words(n: int) -> list[str]:
+    """2e → deuxième, 21e → vingt et unième. 1er는 canonical에서 따로 처리한다."""
+    w = num_words(n)
     last = w[-1]
-    if last.endswith("y"):
-        w[-1] = last[:-1] + "ieth"
-    elif last == "one":
-        w[-1] = "first"
-    elif last == "two":
-        w[-1] = "second"
-    elif last == "three":
-        w[-1] = "third"
-    elif last == "five":
-        w[-1] = "fifth"
-    elif last == "eight":
-        w[-1] = "eighth"
-    elif last == "nine":
-        w[-1] = "ninth"
+    if last == "un":
+        w[-1] = "unième"
+    elif last == "cinq":
+        w[-1] = "cinquième"
+    elif last == "neuf":
+        w[-1] = "neuvième"
+    elif last.endswith("e"):
+        w[-1] = last[:-1] + "ième"
     else:
-        w[-1] = last + "th"
+        w[-1] = last + "ième"
     return w
 
 
 def canonical(text: str) -> list[str]:
-    t = text.lower()
-    t = t.replace("’", "'").replace("‘", "'")
-    t = re.sub(r"[−–-]\s*(?=\d)", " minus ", t)          # −58 → minus 58
-    t = re.sub(r"\$\s*(\d+)", r"\1 dollars", t)          # $25 → 25 dollars
-    t = re.sub(r"(\d+)\s*(℃|°\s*c|degrees?\s+celsius)", r"\1 degrees", t)
-    t = re.sub(r"(\d+)(st|nd|rd|th)\b", lambda m: " ".join(ordinal_words(m.group(1))), t)
+    t = unicodedata.normalize("NFC", text).lower()
+    t = t.replace("’", "'").replace("‘", "'").replace(" ", " ").replace(" ", " ")
+    t = re.sub(r"(?:(?<=\s)|^)[−–-]\s*(?=\d)", " moins ", t)          # −5 → moins 5
+    t = re.sub(r"(\d+)\s*,\s*(\d+)", r"\1 virgule \2", t)              # 3,5 → 3 virgule 5
+    t = re.sub(r"(\d+)\s*%", r"\1 pour cent", t)
+    t = re.sub(r"€\s*(\d+)", r"\1 euros", t)
+    t = re.sub(r"(\d+)\s*€", r"\1 euros", t)
+    t = re.sub(r"(\d+)\s*(℃|°\s*c\b|degrés?\s+celsius)", r"\1 degrés", t)
+    t = re.sub(r"(\d+)\s*h\s*(\d{2})\b", r"\1 heures \2", t)            # 14h30 → 14 heures 30
+    t = re.sub(r"(\d+)\s*h\b", r"\1 heures", t)
+    t = re.sub(r"\b1\s*(er)\b", " premier ", t)
+    t = re.sub(r"\b1\s*(re|ère)\b", " première ", t)
+    t = re.sub(r"(\d+)\s*(?:e|ème|ième|eme)\b", lambda m: " ".join(ordinal_words(int(m.group(1)))), t)
     t = re.sub(r"\d+", lambda m: " ".join(num_words(int(m.group(0)))), t)
-    t = re.sub(r"[^a-z' ]+", " ", t)
-    toks = [w.strip("'") for w in t.split()]
-    toks = [w for w in toks if w]
-    out = []
-    i = 0
-    while i < len(toks):
-        if i + 1 < len(toks) and (toks[i], toks[i + 1]) in CONTRACTIONS:
-            out.append(CONTRACTIONS[(toks[i], toks[i + 1])]); i += 2
-        else:
-            out.append(toks[i]); i += 1
-    return out
+    t = t.replace("'", " ")                                            # 엘리지옹 분리: l'ami → l ami
+    t = re.sub(r"[^\w ]+|[\d_]+", " ", t)                              # 하이픈·구두점 제거, 악센트 문자는 유지
+    return [SAME.get(w, w) for w in t.split()]
 
 
 def align(ref: list[str], hyp: list[str]) -> list[tuple]:
@@ -112,17 +114,7 @@ def expand_words(words: list[dict]) -> list[dict]:
             continue
         for tok in canonical(w["text"]):
             toks.append({"tok": tok, "start": float(w["start"]), "end": float(w["end"])})
-    # 축약형은 단어 경계를 넘어 합친다(전사가 "I" "am"을 따로 줄 때 대본의 "i'm"과 맞도록).
-    out = []
-    i = 0
-    while i < len(toks):
-        if i + 1 < len(toks) and (toks[i]["tok"], toks[i + 1]["tok"]) in CONTRACTIONS:
-            out.append({"tok": CONTRACTIONS[(toks[i]["tok"], toks[i + 1]["tok"])],
-                        "start": toks[i]["start"], "end": toks[i + 1]["end"]})
-            i += 2
-        else:
-            out.append(toks[i]); i += 1
-    return out
+    return toks
 
 
 def score_dialogue(dialogue: dict, scribe: dict, turn_offsets: list, cfg: dict) -> dict:

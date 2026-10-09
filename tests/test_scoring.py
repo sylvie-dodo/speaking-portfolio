@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from scoring import align, canonical, dialogue_score, expand_words, final_score, score_dialogue, DEFAULT_CFG
+from scoring import align, canonical, dialogue_score, final_score, score_dialogue, DEFAULT_CFG
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "dialogues.json"
 BY_ID = {d["id"]: d for d in json.loads(DATA_PATH.read_text(encoding="utf-8"))} if DATA_PATH.exists() else {}
@@ -31,30 +31,33 @@ def offsets_for(d, unit_sec=12.0, gap=0.5):
 
 
 @pytest.mark.parametrize("src,expected", [
-    ("Jiho, what are you reading?", ["jiho", "what", "are", "you", "reading"]),
-    ("I'm going to watch it.", ["i'm", "going", "to", "watch", "it"]),
-    ("This museum opened in 1995.", ["this", "museum", "opened", "in", "nineteen", "ninety", "five"]),
-    ("about −58℃ in July", ["about", "minus", "fifty", "eight", "degrees", "in", "july"]),
-    ("about -58°C in July", ["about", "minus", "fifty", "eight", "degrees", "in", "july"]),
-    ("about minus 58 degrees Celsius in July", ["about", "minus", "fifty", "eight", "degrees", "in", "july"]),
-    ("November 5th", ["november", "fifth"]),
-    ("November fifth", ["november", "fifth"]),
-    ("the 25th", ["the", "twenty", "fifth"]),
-    ("25 dollars", ["twenty", "five", "dollars"]),
-    ("$25", ["twenty", "five", "dollars"]),
-    ("for 3 years", ["for", "three", "years"]),
-    ("He's 10.", ["he's", "ten"]),
-    ("I am going", ["i'm", "going"]),
+    ("Bonjour, ça va ?", ["bonjour", "ça", "va"]),
+    ("J'ai visité l'école.", ["j", "ai", "visité", "l", "école"]),
+    ("J’ai visité l’école.", ["j", "ai", "visité", "l", "école"]),
+    ("Qu'est-ce que tu fais ?", ["qu", "est", "ce", "que", "tu", "fais"]),
+    ("ÉCOLE", ["école"]),
+    ("J'ai 21 ans.", ["j", "ai", "vingt", "et", "un", "ans"]),
+    ("J'ai vingt et un ans.", ["j", "ai", "vingt", "et", "un", "ans"]),
+    ("71", ["soixante", "et", "onze"]),
+    ("80", ["quatre", "vingt"]),
+    ("quatre-vingts", ["quatre", "vingt"]),
+    ("97", ["quatre", "vingt", "dix", "sept"]),
+    ("quatre-vingt-dix-sept", ["quatre", "vingt", "dix", "sept"]),
+    ("200", ["deux", "cent"]),
+    ("deux cents", ["deux", "cent"]),
+    ("en 1995", ["en", "mille", "neuf", "cent", "quatre", "vingt", "quinze"]),
+    ("le 1er mai", ["le", "premier", "mai"]),
+    ("la 2e fois", ["la", "deuxième", "fois"]),
+    ("le 21e siècle", ["le", "vingt", "et", "unième", "siècle"]),
+    ("le 5ème étage", ["le", "cinquième", "étage"]),
+    ("à 14h30", ["à", "quatorze", "heures", "trente"]),
+    ("à 8 h", ["à", "huit", "heures"]),
+    ("15 €", ["quinze", "euros"]),
+    ("−5 °C", ["moins", "cinq", "degrés"]),
+    ("3,5 %", ["trois", "virgule", "cinq", "pour", "cent"]),
 ])
 def test_canonical(src, expected):
     assert canonical(src) == expected
-
-
-def test_contraction_merges_across_transcript_words():
-    words = [{"text": "I", "start": 0.0, "end": 0.2, "type": "word"},
-             {"text": "am", "start": 0.3, "end": 0.5, "type": "word"},
-             {"text": "going", "start": 0.6, "end": 0.9, "type": "word"}]
-    assert [w["tok"] for w in expand_words(words)] == ["i'm", "going"]
 
 
 def test_align_substitution_and_deletion():
@@ -155,16 +158,13 @@ def test_empty_transcript_scores_one():
     assert r["satisfied"] == 0 and r["score"] == 1
 
 
-@needs_data
 def test_numbers_as_digits_or_words_both_match():
-    d = BY_ID["L6-3"]  # "This museum opened in 1995."
+    d = {"units": [{"n": 1, "speaker": "A", "text": "Le musée a ouvert en 1995."}],
+         "expressions": [{"n": 1, "unit": 1, "text": "Le musée a ouvert en 1995."}]}
     offs = offsets_for(d)
-    for spoken in ("This museum opened in 1995.", "This museum opened in nineteen ninety-five."):
-        texts = [u["text"] for u in d["units"]]
-        texts[1] = spoken
-        r = score_dialogue(d, words_from(texts, offs), offs, DEFAULT_CFG)
-        e = next(x for x in r["expressions"] if x["text"] == "This museum opened in 1995.")
-        assert e["match_ratio"] == 1.0, spoken
+    for spoken in ("Le musée a ouvert en 1995.", "Le musée a ouvert en mille neuf cent quatre-vingt-quinze."):
+        r = score_dialogue(d, words_from([spoken], offs), offs, DEFAULT_CFG)
+        assert r["expressions"][0]["match_ratio"] == 1.0, spoken
 
 
 @pytest.mark.parametrize("n,s", [(10, 10), (9, 10), (8, 9), (5, 6), (1, 2), (0, 1)])

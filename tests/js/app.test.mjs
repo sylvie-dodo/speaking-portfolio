@@ -55,7 +55,7 @@ function app(t, overrides = {}) {
   const $ = (id) => w.document.getElementById(id);
   async function enter() {
     const form = $("entry-form");
-    form.elements.cls.value = "1"; form.elements.num.value = "40"; form.elements.name.value = "교사 예시";
+    form.elements.cls.value = "1"; form.elements.num.value = "20"; form.elements.name.value = "교사 예시";
     form.dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
     await settle();
   }
@@ -202,9 +202,9 @@ test("mic-test completion in the background does not restart playback", async (t
   assert.equal(a.$("btn-mic-next").disabled, false);
 });
 
-test("entry uses a labelled select and routes a teacher to class progress", async (t) => {
+test("entry fixes the single class and routes a teacher to class progress", async (t) => {
   const a = app(t, { checkIn: async () => ({ ok: true, is_teacher: true }) });
-  assert.equal(a.$("entry-form").elements.cls.tagName, "SELECT");
+  assert.equal(a.$("entry-form").elements.cls.type, "hidden");
   assert.equal(a.w.document.querySelectorAll('input[type="password"]').length, 0);
   await a.enter();
   assert.equal(a.$("screen-teacher").hidden, false);

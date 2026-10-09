@@ -12,12 +12,12 @@
 
 정본이나 하위 `CLAUDE.md`를 수정하면 프로젝트 루트에서 `python sync_agent_docs.py`를 실행한다. `AGENTS.md`는 직접 수정하지 않으며, `python sync_agent_docs.py --check`로 동기화 상태를 확인한다.
 
-신명중 3학년 영어B 말하기 포트폴리오 녹음 평가 웹앱과 교사 채점 스크립트. 설계 정본은 `docs/superpowers/specs/2026-10-08-speaking-portfolio-design.md`, 구현 플랜은 `docs/superpowers/plans/2026-10-08-speaking-portfolio.md`.
+한국외국어대학교 프랑스어교육과 말하기 포트폴리오 녹음 평가 웹앱과 교사 채점 스크립트. 한 반(1반), 학생 1~15번, 교사 20번. 대화문은 프랑스어이며 전사·채점도 프랑스어 기준이다. 진행 상황과 남은 작업은 `docs/진행상황.md`에 있으므로 작업을 시작할 때 먼저 읽는다. 설계 정본은 `docs/superpowers/specs/2026-10-08-speaking-portfolio-design.md`, 구현 플랜은 `docs/superpowers/plans/2026-10-08-speaking-portfolio.md`.
 
 ## 구조
 
 - `index.html`, `styles.css`, `app.js`, `lib/` : 웹앱(빌드 없음, ES modules). 화면 로직은 `app.js`, Supabase 연동은 `lib/supa.js`에 둔다. `config.js`는 gitignore, `config.example.js`를 복사해 채운다.
-- `data/dialogues.json` : 대화문 9편. `scripts/build_dialogues.py`로 생성하며 손으로 고치지 않는다.
+- `data/dialogues.json` : 대화문(원작 영어 9편, 프랑스어 약 5편으로 교체 예정). 추첨 범위는 편 수를 따른다. `scripts/build_dialogues.py`로 생성하며 손으로 고치지 않는다.
 - `supabase/migrations/` : 스키마·RLS·함수.
 - `scripts/` : 교사 스크립트. `.env`(gitignore)에서 키를 읽는다.
 - `tests/` : pytest(`tests/test_*.py`), node --test(`tests/js/*.test.mjs`).

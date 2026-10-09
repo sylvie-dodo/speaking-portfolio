@@ -8,3 +8,4 @@ node_modules/
 tests/fixtures/*.wav
 supabase/.temp/
 .sanitize.local.md
+.venv/

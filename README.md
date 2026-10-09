@@ -1,6 +1,6 @@
 # speaking-portfolio
 
-신명중 3학년 영어B 말하기 포트폴리오 녹음 평가 도구. 학생은 크롬북에서 대화문 2편을 턴별로 녹음해 한 번 제출한다. 교사는 웹 대시보드에서 제출 현황·녹음을 확인하고 평가를 개방하며, 로컬 스크립트로 전사하고 공식 점수표로 자동 채점한다.
+한국외국어대학교 프랑스어교육과 말하기 포트폴리오 녹음 평가 도구. 학생은 대화문 2편을 턴별로 녹음해 한 번 제출한다. 교사는 웹 대시보드에서 제출 현황·녹음을 확인하고 평가를 개방하며, 로컬 스크립트로 전사하고 공식 점수표로 자동 채점한다.
 
 ## 명령
 
@@ -19,16 +19,16 @@
 
 ## 배포
 
-`main`에 push하면 `.github/workflows/pages.yml`이 GitHub Secrets(`SUPABASE_URL`, `SUPABASE_ANON_KEY`)로 `config.js`를 만들어 앱 파일만 GitHub Pages에 올린다. 주소: https://engccer.github.io/speaking-portfolio/
+`main`에 push하면 `.github/workflows/pages.yml`이 GitHub Secrets(`SUPABASE_URL`, `SUPABASE_ANON_KEY`)로 `config.js`를 만들어 앱 파일만 GitHub Pages에 올린다. 주소: https://sylvie-dodo.github.io/speaking-portfolio/
 
 처음 한 번: 저장소 Settings > Secrets and variables > Actions에 두 시크릿을 넣고, Settings > Pages의 Source를 "GitHub Actions"로 바꾼다. Supabase 프로젝트·키·계정 분리는 `supabase/README.md`.
 
 ## 수업 당일 운영
 
-1. 교사 명렬 정보로 입장하고 대시보드에서 해당 반의 `입장 열기` 선택(또는 `python scripts/open.py <반>`)
+1. 교사 명렬 정보로 입장하고 대시보드에서 `1반 입장 열기` 선택(또는 `python scripts/open.py`)
 2. 학생은 위 주소에서 입장 → 마이크 테스트 → 본 평가
-3. 수업 끝 해당 반의 `마감하기` 선택(또는 `python scripts/close.py <반>`)
-4. `python scripts/download.py --class <반> "<출력 폴더>"` → `python scripts/transcribe.py "<출력 폴더>"` → `python scripts/score.py "<출력 폴더>"`
+3. 수업 끝 `1반 마감하기` 선택(또는 `python scripts/close.py`)
+4. `python scripts/download.py --class 1 "<출력 폴더>"` → `python scripts/transcribe.py "<출력 폴더>"` → `python scripts/score.py "<출력 폴더>"`
 
 학생은 제출 화면에서 `내 녹음 전체 재생하기`로 제출할 병합본을 차례대로 들을 수 있다. 모의 평가는 선택사항이다. 완료 후 `본 평가 시작하기`로 바로 진행하거나 `이전으로 돌아가기`로 입장 상태를 유지한 평가 선택 화면에 돌아간다. 평가 선택 화면에는 서버에 저장된 모의 평가 완료 여부를 표시한다.
 
@@ -38,13 +38,13 @@
 
 학급 입장은 모의 평가와 본 평가를 함께 제어한다. 닫힌 반은 학생 입장·평가 시작·제출이 차단되며, 교사는 입장할 수 있다. 녹음 도중 닫히면 제출 화면에서 안내하고 녹음을 유지한다. 창을 닫지 않은 상태에서 교사가 다시 열면 제출을 재시도할 수 있다.
 
-번호는 직접 입력하거나 아래·위 방향키로 탐색한 뒤 Enter 또는 Tab으로 선택한다. 목록이 열려 있으면 Home은 1번, End는 40번으로 이동한다. 목록이 닫혀 있으면 Home·End는 입력 커서를 이동한다. Escape는 선택 전 입력을 유지하며 목록을 닫는다.
+번호는 직접 입력하거나 아래·위 방향키로 탐색한 뒤 Enter 또는 Tab으로 선택한다. 목록이 열려 있으면 Home은 1번, End는 20번으로 이동한다. 번호 범위(1~20)는 `lib/number-combobox.js`의 `MAX_NUMBER`로 정한다. 목록이 닫혀 있으면 Home·End는 입력 커서를 이동한다. Escape는 선택 전 입력을 유지하며 목록을 닫는다.
 
 제출 학생에게 재응시를 허용하려면 교사 대시보드에서 `제출 되돌려주기`를 선택하고 확인한다. 기존 제출과 녹음은 보관되며, 학생이 다시 입장하면 본 평가를 다시 할 수 있다. 반이 마감된 경우에는 교사가 별도로 개방해야 한다. 새 응시 녹음은 별도 경로에 저장된다.
 
 ## 교사 대시보드 설정
 
-`supabase/migrations/20261008212802_teacher_dashboard.sql`을 서버에 적용한 후 앱을 배포한다. 기존 명렬의 1반 40번 행을 교사로 지정하며, 교사 이름은 서버 명렬에서만 관리한다. 반·번호·이름을 서버가 확인하고, 조회·반 개방 변경·녹음 접근마다 교사 여부를 다시 검사한다. 별도 비밀번호나 Supabase Auth 계정은 사용하지 않는다.
+`supabase/migrations/20261008212802_teacher_dashboard.sql`을 서버에 적용한 후 앱을 배포한다. 명렬의 20번 행을 교사로 지정하며(`scripts/seed_students.py`가 적재할 때 지정), 교사 이름은 서버 명렬에서만 관리한다. 반·번호·이름을 서버가 확인하고, 조회·반 개방 변경·녹음 접근마다 교사 여부를 다시 검사한다. 별도 비밀번호나 Supabase Auth 계정은 사용하지 않는다.
 
 되돌려주기에는 `supabase/migrations/20261008215138_return_submissions.sql`도 적용한다. `returned_submissions`에 제출 원본·반환 시각·처리 교사 정보를 보관하고 현재 제출에서 제외한다. 권한 확인과 보관·반환은 단일 트랜잭션으로 처리하며, 제출 ID로 대상을 지정해 중복 요청이 새 제출에 영향을 주지 않게 한다.
 

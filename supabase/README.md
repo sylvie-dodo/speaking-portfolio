@@ -40,8 +40,8 @@ supabase --profile ~/.supabase/school.yml projects list
 
    기존 운영 DB에는 먼저 학교 프로필로 `supabase db push --project-ref <ref> --dry-run --skip-vault`를 실행해 적용 대상을 확인한 뒤 같은 명령에서 `--dry-run`을 빼고 적용한다. 로컬 마이그레이션 파일의 버전은 서버 이력과 같아야 하며, 이미 적용된 파일을 다시 실행하지 않는다. SQL 조회는 `supabase db query --linked --project-ref <ref> --file <검증 SQL>`로 수행한다.
 2. `pip install -r requirements.txt`
-3. `python scripts/seed_students.py "<플랭스쿨 연습 기록 폴더>"` 로 명렬 적재.
-4. `python scripts/upload_audio.py "<교과서 듣기 음원 폴더>"` 로 공식 음원 9개 업로드.
+3. `python scripts/seed_students.py "<명렬 CSV>"` 로 명렬 적재(열 `번호`,`이름`, 학생 1~15번과 교사 20번 행 포함).
+4. `python scripts/upload_audio.py "<교과서 듣기 음원 폴더>"` 로 공식 음원 업로드(프랑스어 음원으로 교체 예정).
 5. `python -m pytest tests/test_rls.py -q` 로 보안 정책 검증(실서버 호출, `.env`·`config.js` 필요).
 
 ## 4. 배포
