@@ -16,12 +16,7 @@
     <h2 tabindex="-1">입장</h2>
     <form id="entry-form">
       <input type="hidden" name="cls" value="1">
-      <div class="number-field">
-        <label for="student-number" id="number-label">번호</label>
-        <input type="text" id="student-number" name="num" inputmode="numeric" autocomplete="off"
-          role="combobox" aria-expanded="false" aria-controls="number-options" aria-autocomplete="none" required>
-        <ul id="number-options" class="number-options" role="listbox" aria-labelledby="number-label" hidden></ul>
-      </div>
+      <p><label>학번 <input type="text" name="sid" autocomplete="off" autocapitalize="characters" spellcheck="false" required></label></p>
       <p><label>이름 <input type="text" name="name" autocomplete="off" required></label></p>
       <p id="entry-error" class="error"></p>
       <button type="submit">입장하기</button>

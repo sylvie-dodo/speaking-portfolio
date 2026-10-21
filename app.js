@@ -1,12 +1,11 @@
-import { checkIn, enterStudent, getStudentScore, downloadAudio, getClient, getTeacherDashboard, setClassOpen, getRecordingUrl, returnSubmission } from "./lib/supa.js?v=published-scores";
-import { initNumberCombobox } from "./lib/number-combobox.js";
+import { checkIn, resolveStudent, enterStudent, getStudentScore, downloadAudio, getClient, getTeacherDashboard, setClassOpen, getRecordingUrl, returnSubmission } from "./lib/supa.js?v=published-scores";
 import { startCapture } from "./lib/recording.js";
 import { startMicMeter } from "./lib/mic-meter.js";
 import { drawExam, drawPractice } from "./lib/draw.js";
 import { mergeTracks, encodeWav } from "./lib/wav.js";
 
 export const state = {
-  cls: 0, num: 0, name: "", mode: "", dialogues: [], current: 0, recordings: {}, stream: null,
+  cls: 0, num: 0, sid: "", name: "", mode: "", dialogues: [], current: 0, recordings: {}, stream: null,
   submitted: false, built: null,
   entered: false, isTeacher: false, examSubmitted: false, practiceCompleted: null,
   classOpen: true,
@@ -17,7 +16,6 @@ const SR = 16000;
 
 const $ = (id) => document.getElementById(id);
 const live = $("live");
-initNumberCombobox($("student-number"), $("number-options"));
 export function announce(text) { live.textContent = ""; setTimeout(() => { live.textContent = text; }, 50); }
 
 export function showScreen(id) {
@@ -30,7 +28,8 @@ const normName = (s) => s.replace(/[\s　]/g, "");
 const fmt = (sec) => `${sec.toFixed(1)}초`;
 let entryBusy = false;
 const closedMessage = "지금은 이 반의 입장이 닫혀 있습니다. 선생님이 열어 주면 모의 평가와 본 평가에 참여할 수 있습니다.";
-const entryMessage = (r) => r.reason === "class_closed" ? closedMessage : "명렬에 없습니다. 번호와 이름을 확인하세요.";
+const notFoundMessage = "명렬에 없습니다. 학번과 이름을 확인하세요.";
+const entryMessage = (r) => r.reason === "class_closed" ? closedMessage : notFoundMessage;
 
 function updateParticipation(result) {
   state.examSubmitted = !!result.submitted;
@@ -39,7 +38,7 @@ function updateParticipation(result) {
 }
 
 function showMode() {
-  $("mode-greeting").textContent = `${state.cls}반 ${state.num}번 ${state.name}`;
+  $("mode-greeting").textContent = `${state.sid} ${state.name}`;
   $("practice-status").textContent = state.practiceCompleted === null
     ? "모의 평가 완료 여부를 확인하지 못했습니다."
     : `모의 평가 ${state.practiceCompleted ? "완료" : "미완료"}`;
@@ -61,12 +60,15 @@ $("entry-form").addEventListener("submit", async (e) => {
   const entryButton = e.target.querySelector('button[type="submit"]');
   entryButton.setAttribute("aria-disabled", "true");
   const f = new FormData(e.target);
-  const cls = Number(f.get("cls")), num = Number(f.get("num")), name = String(f.get("name") || "").trim();
+  const sid = String(f.get("sid") || "").trim().toUpperCase(), name = String(f.get("name") || "").trim();
   $("entry-error").textContent = "";
   try {
+    const who = await resolveStudent(sid, name);
+    if (!who) { $("entry-error").textContent = notFoundMessage; announce(notFoundMessage); return; }
+    const cls = who.class, num = who.number;
     const r = await enterStudent(cls, num, name);
     if (!r.ok) { $("entry-error").textContent = entryMessage(r); announce($("entry-error").textContent); return; }
-    Object.assign(state, { cls, num, name: normName(name), entered: true, isTeacher: !!r.is_teacher });
+    Object.assign(state, { cls, num, sid, name: normName(name), entered: true, isTeacher: !!r.is_teacher });
     updateParticipation(r);
     if (r.is_teacher) {
       showScreen("screen-teacher");
@@ -109,7 +111,7 @@ async function showScore() {
   if (modeBusy) return;
   const request = ++scoreRequest, version = sessionVersion;
   const result = $("score-result");
-  $("score-greeting").textContent = `${state.cls}반 ${state.num}번 ${state.name}`;
+  $("score-greeting").textContent = `${state.sid} ${state.name}`;
   result.textContent = "점수를 불러오는 중입니다.";
   $("btn-score-retry").hidden = true;
   showScreen("screen-score");
@@ -703,7 +705,7 @@ function exitStudent() {
   $("btn-mic-test").removeAttribute("aria-disabled");
   $("btn-play-all").disabled = false;
   $("btn-prev-dialogue").disabled = false;
-  Object.assign(state, { cls: 0, num: 0, name: "", recordings: {}, built: null, submitted: false, dialogues: [], current: 0, mode: "", entered: false, isTeacher: false, examSubmitted: false, practiceCompleted: null });
+  Object.assign(state, { cls: 0, num: 0, sid: "", name: "", recordings: {}, built: null, submitted: false, dialogues: [], current: 0, mode: "", entered: false, isTeacher: false, examSubmitted: false, practiceCompleted: null });
   $("entry-form").reset();
   $("entry-error").textContent = "";
   showScreen("screen-entry");
@@ -763,6 +765,9 @@ async function refreshTeacher() {
   }
 }
 
+// 학번이 없는 명렬(원작 형식)은 번호로 표시한다.
+const studentLabel = (student) => student.student_id || `${student.number}번`;
+
 function renderTeacher(classes) {
   const container = $("teacher-classes");
   if (!classes.length) {
@@ -811,13 +816,14 @@ function renderTeacher(classes) {
     const table = document.createElement("table");
     const caption = table.createCaption(); caption.textContent = `${cls.class}반 평가 현황`;
     const header = table.createTHead().insertRow();
-    ["번호", "이름", "최종 점수", "모의 평가", "모의 평가 녹음", "본 평가", "본 평가 녹음", "재응시"].forEach((name) => {
+    ["학번", "학년", "이름", "최종 점수", "모의 평가", "모의 평가 녹음", "본 평가", "본 평가 녹음", "재응시"].forEach((name) => {
       const th = document.createElement("th"); th.scope = "col"; th.textContent = name; header.append(th);
     });
     const tbody = table.createTBody();
     cls.students.forEach((student) => {
       const row = tbody.insertRow();
-      row.insertCell().textContent = student.number;
+      row.insertCell().textContent = student.student_id ?? "";
+      row.insertCell().textContent = student.grade ? `${student.grade}학년` : "";
       const name = document.createElement("th"); name.scope = "row"; name.textContent = student.name; row.append(name);
       name.id = `teacher-student-${cls.class}-${student.number}`;
       const scoreCell = row.insertCell();
@@ -831,7 +837,7 @@ function renderTeacher(classes) {
           if (teacherBusy || !state.isTeacher) return;
           stopTeacherAudio();
           const dialog = $("teacher-score-dialog");
-          $("teacher-score-title").textContent = `${cls.class}반 ${student.number}번 ${student.name} 점수 세부사항`;
+          $("teacher-score-title").textContent = `${studentLabel(student)} ${student.name} 점수 세부사항`;
           renderScore($("teacher-score-result"), score);
           dialog.onclose = () => {
             $("teacher-score-result").replaceChildren();
@@ -847,11 +853,11 @@ function renderTeacher(classes) {
       row.insertCell().textContent = !Array.isArray(practices) ? "확인 불가" : practices.length ? "완료" : "미완료";
       const practiceFiles = row.insertCell();
       const recordings = (practices || []).map((attempt, i) => ({ path: attempt.file, cell: practiceFiles,
-        label: `${student.number}번 모의 평가 ${practices.length - i}회 ${attempt.dialogue_id} 녹음 재생하기` }));
+        label: `${studentLabel(student)} 모의 평가 ${practices.length - i}회 ${attempt.dialogue_id} 녹음 재생하기` }));
       if (!recordings.length) practiceFiles.textContent = Array.isArray(practices) ? "녹음 없음" : "확인 불가";
       row.insertCell().textContent = student.submitted_at ? "제출" : "미제출";
       const files = row.insertCell();
-      recordings.push(...student.files.map((path, i) => ({ path, cell: files, label: `${student.number}번 대화 ${i + 1} 녹음 재생하기` })));
+      recordings.push(...student.files.map((path, i) => ({ path, cell: files, label: `${studentLabel(student)} 대화 ${i + 1} 녹음 재생하기` })));
       recordings.forEach(({ path, cell, label }) => {
         const play = document.createElement("button"); play.type = "button";
         play.dataset.label = label;
@@ -885,7 +891,7 @@ function renderTeacher(classes) {
       const action = row.insertCell();
       if (student.submission_id) {
         const giveBack = document.createElement("button"); giveBack.type = "button";
-        giveBack.textContent = `${student.number}번 제출 되돌려주기`;
+        giveBack.textContent = `${studentLabel(student)} 제출 되돌려주기`;
         giveBack.addEventListener("click", () => confirmReturn(cls, student, giveBack));
         action.append(giveBack);
       }
@@ -898,7 +904,7 @@ function renderTeacher(classes) {
 function confirmReturn(cls, student, button) {
   if (teacherBusy) return;
   const dialog = $("return-dialog");
-  $("return-detail").textContent = `${cls.class}반 ${student.number}번 ${student.name}의 기존 제출과 녹음을 보관하고 다시 응시할 수 있게 합니다. 학생은 다시 입장해야 하며, 학급 입장이 열려 있어야 참여할 수 있습니다.`;
+  $("return-detail").textContent = `${studentLabel(student)} ${student.name}의 기존 제출과 녹음을 보관하고 다시 응시할 수 있게 합니다. 학생은 다시 입장해야 하며, 학급 입장이 열려 있어야 참여할 수 있습니다.`;
   dialog.returnValue = "";
   dialog.onclose = async () => {
     if (dialog.returnValue !== "ok") { button.focus(); return; }
@@ -913,7 +919,7 @@ function confirmReturn(cls, student, button) {
       teacherBusy = false;
       const refreshed = await refreshTeacher();
       const message = result.returned
-        ? `${cls.class}반 ${student.number}번 제출을 되돌려주었습니다. 학생이 다시 입장하면 재응시할 수 있습니다.`
+        ? `${studentLabel(student)} 제출을 되돌려주었습니다. 학생이 다시 입장하면 재응시할 수 있습니다.`
         : "이미 처리된 제출입니다. 현재 현황을 확인하세요.";
       announce(refreshed ? message : `${message} 현황은 불러오지 못했습니다. 다시 새로고침하세요.`);
     } catch (err) {
@@ -934,7 +940,7 @@ $("btn-teacher-exit").addEventListener("click", () => {
   if (teacherBusy) return;
   stopTeacherAudio();
   $("teacher-classes").replaceChildren();
-  Object.assign(state, { cls: 0, num: 0, name: "", entered: false, isTeacher: false, examSubmitted: false, practiceCompleted: null });
+  Object.assign(state, { cls: 0, num: 0, sid: "", name: "", entered: false, isTeacher: false, examSubmitted: false, practiceCompleted: null });
   $("entry-form").reset();
   showScreen("screen-entry");
 });

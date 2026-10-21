@@ -6,7 +6,7 @@
 
 정본이나 하위 `CLAUDE.md`를 수정하면 프로젝트 루트에서 `python sync_agent_docs.py`를 실행한다. `AGENTS.md`는 직접 수정하지 않으며, `python sync_agent_docs.py --check`로 동기화 상태를 확인한다.
 
-한국외국어대학교 프랑스어교육과 말하기 포트폴리오 녹음 평가 웹앱과 교사 채점 스크립트. 한 반(1반), 학생 1~15번, 교사 20번. 대화문은 프랑스어이며 전사·채점도 프랑스어 기준이다. 진행 상황과 남은 작업은 `docs/진행상황.md`에 있으므로 작업을 시작할 때 먼저 읽는다. 설계 정본은 `docs/superpowers/specs/2026-10-08-speaking-portfolio-design.md`, 구현 플랜은 `docs/superpowers/plans/2026-10-08-speaking-portfolio.md`.
+한국외국어대학교 프랑스어교육과 말하기 포트폴리오 녹음 평가 웹앱과 교사 채점 스크립트. 한 반(1반), 학생 15명(1·2학년)은 학번과 이름으로 입장하고, 내부 번호는 명렬 순번이다. 교사는 명렬에서 학년이 빈 행이다. 대화문은 프랑스어이며 전사·채점도 프랑스어 기준이다. 진행 상황과 남은 작업은 `docs/진행상황.md`에 있으므로 작업을 시작할 때 먼저 읽는다. 설계 정본은 `docs/superpowers/specs/2026-10-08-speaking-portfolio-design.md`, 구현 플랜은 `docs/superpowers/plans/2026-10-08-speaking-portfolio.md`.
 
 ## 구조
 

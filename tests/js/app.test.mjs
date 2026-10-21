@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { JSDOM } from "jsdom";
 import { mergeTracks, encodeWav } from "../../lib/wav.js";
-import { initNumberCombobox } from "../../lib/number-combobox.js";
 import { startCapture } from "../../lib/recording.js";
 
 const html = await readFile(new URL("../../index.html", import.meta.url), "utf8");
@@ -32,7 +31,8 @@ function app(t, overrides = {}) {
   w.HTMLMediaElement.prototype.pause = function () {};
   w.HTMLMediaElement.prototype.play = async function () {};
   Object.assign(w, {
-    mergeTracks, encodeWav, initNumberCombobox,
+    mergeTracks, encodeWav,
+    resolveStudent: async () => ({ class: 1, number: 16 }),
     startCapture: (stream, handlers) => startCapture(stream, handlers, w.MediaRecorder),
     startMicMeter: () => () => {},
     fetch: async () => ({ json: async () => dialogues }),
@@ -57,7 +57,7 @@ function app(t, overrides = {}) {
   const $ = (id) => w.document.getElementById(id);
   async function enter() {
     const form = $("entry-form");
-    form.elements.cls.value = "1"; form.elements.num.value = "20"; form.elements.name.value = "교사 예시";
+    form.elements.cls.value = "1"; form.elements.sid.value = "t001"; form.elements.name.value = "교사 예시";
     form.dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
     await settle();
   }
@@ -310,28 +310,28 @@ test("teacher list exposes only final scores and opens the selected student's de
   });
   await a.enter();
   let rows = a.$('teacher-classes').querySelectorAll('tbody tr');
-  assert.deepEqual([...rows].map(r => r.cells[2].textContent), ['9점', '0점', '재응시', '미게시', '확인 불가']);
+  assert.deepEqual([...rows].map(r => r.cells[3].textContent), ['9점', '0점', '재응시', '미게시', '확인 불가']);
   assert.doesNotMatch(a.$('teacher-classes').textContent, /Lesson 5-1|통과한 표현|2, 3/);
-  const button = rows[0].cells[2].querySelector('button');
+  const button = rows[0].cells[3].querySelector('button');
   assert.equal(a.w.document.getElementById(button.getAttribute('aria-describedby')).textContent, '학생 1');
   button.focus(); button.click();
   const dialog = a.$('teacher-score-dialog');
   assert.equal(dialog.open, true);
-  assert.match(a.$('teacher-score-title').textContent, /4반 1번 학생 1/);
+  assert.match(a.$('teacher-score-title').textContent, /1번 학생 1 점수 세부사항/);
   assert.match(a.$('teacher-score-result').textContent, /최종 점수: 9점/);
   assert.match(a.$('teacher-score-result').textContent, /기준에 못 미친 표현 번호: 2, 3/);
   assert.equal(a.w.document.activeElement, a.$('teacher-score-title'));
   dialog.open = false; dialog.dispatchEvent(new a.w.Event('close'));
   assert.equal(a.w.document.activeElement, button);
   assert.equal(a.$('teacher-score-result').textContent, '');
-  rows[2].cells[2].querySelector('button').click();
+  rows[2].cells[3].querySelector('button').click();
   assert.equal(a.$('teacher-score-result').textContent, '재응시');
-  assert.match(a.$('teacher-score-title').textContent, /4반 3번 학생 3/);
+  assert.match(a.$('teacher-score-title').textContent, /3번 학생 3 점수 세부사항/);
   dialog.open = false; dialog.dispatchEvent(new a.w.Event('close'));
   scores[0] = {...scores[0], final_score: 10};
   a.$('btn-teacher-refresh').click(); await settle();
   rows = a.$('teacher-classes').querySelectorAll('tbody tr');
-  assert.equal(rows[0].cells[2].textContent, '10점');
+  assert.equal(rows[0].cells[3].textContent, '10점');
 });
 
 test("teacher playback request cannot start after leaving the dashboard", async (t) => {
@@ -678,11 +678,11 @@ test("dashboard separates optional practice completion and plays every practice 
   });
   await a.enter();
   const rows = a.w.document.querySelectorAll("tbody tr");
-  assert.equal(rows[0].cells[3].textContent, "완료");
-  assert.equal(rows[0].cells[5].textContent, "미제출");
-  assert.equal(rows[1].cells[3].textContent, "미완료");
-  assert.equal(rows[2].cells[3].textContent, "확인 불가");
-  const buttons = rows[0].cells[4].querySelectorAll("button");
+  assert.equal(rows[0].cells[4].textContent, "완료");
+  assert.equal(rows[0].cells[6].textContent, "미제출");
+  assert.equal(rows[1].cells[4].textContent, "미완료");
+  assert.equal(rows[2].cells[4].textContent, "확인 불가");
+  const buttons = rows[0].cells[5].querySelectorAll("button");
   assert.equal(buttons.length, 2);
   buttons[0].click(); await settle();
   buttons[1].click(); await settle();

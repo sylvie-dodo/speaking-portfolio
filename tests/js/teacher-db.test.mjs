@@ -381,3 +381,17 @@ test("교사 표시 해제는 다음 RPC·Storage 요청부터 적용된다", as
   await assert.rejects(rpc("teacher_return_submission", [...teacher,"00000000-0000-0000-0000-000000000001"]), { code: "42501" });
   assert.deepEqual(await recordings(header()), []);
 });
+
+test("resolve_student는 학번과 이름이 모두 맞을 때만 반·번호를 돌려준다", async () => {
+  await db.exec("reset role; update public.students set student_id = 'S001', grade = 1 where class = 1 and number = 2; update public.students set is_teacher = true where class = 1 and number = 40; set role anon;");
+  const resolve = async (sid, name) => (await db.query("select public.resolve_student($1, $2) as value", [sid, name])).rows[0].value;
+  assert.deepEqual(await resolve("S001", "학생 둘"), { class: 1, number: 2 });
+  assert.deepEqual(await resolve(" s001 ", "학생　 둘"), { class: 1, number: 2 });
+  assert.equal(await resolve("S001", "틀린 이름"), null);
+  assert.equal(await resolve("S002", "학생 둘"), null);
+  assert.equal(await resolve("S001", ""), null);
+  const dashboard = await rpc("teacher_dashboard");
+  const row = dashboard.classes.find((c) => c.class === 1).students.find((s) => s.number === 2);
+  assert.equal(row.student_id, "S001");
+  assert.equal(row.grade, 1);
+});
