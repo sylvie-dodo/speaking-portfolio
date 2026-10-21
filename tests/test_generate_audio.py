@@ -22,7 +22,7 @@ def test_voices_follow_the_chosen_cast():
     cast = lambda did: {(u["name"] or u["speaker"]): voice_for(by_id[did], u) for u in by_id[did]["units"]}
     assert cast("P1-1") == {"A": "Alice", "B": "George"}
     assert cast("P1-2") == {"A": "Alice", "B": "Daniel"}
-    assert cast("P2-2")["Cécile"] == "Alice" and cast("P2-2")["La vendeuse"] == "Lily" and cast("P2-2")["Medhi"] == "Chris"
+    assert cast("P2-2")["Cécile"] == "Alice" and cast("P2-2")["La vendeuse"] == "Eric" and cast("P2-2")["Medhi"] == "Chris"
     assert set(cast("P3-1").values()) == {"Brian"} and set(cast("P3-2").values()) == {"Lily"}
     for d in DATA:
         for u in d["units"]:
