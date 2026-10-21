@@ -1,0 +1,42 @@
+{
+  "P1-1": {
+    "file": "P1-1.wav",
+    "text_hash": "6d5a2037cc0d80ae"
+  },
+  "P1-2": {
+    "file": "P1-2.wav",
+    "text_hash": "399c9d7caad016bb"
+  },
+  "P1-3": {
+    "file": "P1-3.wav",
+    "text_hash": "659a48b90548ce84"
+  },
+  "P1-4": {
+    "file": "P1-4.wav",
+    "text_hash": "729f8805367e5e0a"
+  },
+  "P1-5": {
+    "file": "P1-5.wav",
+    "text_hash": "927533196ca0fce7"
+  },
+  "P2-1": {
+    "file": "P2-1.wav",
+    "text_hash": "4584144f6bdf8051"
+  },
+  "P2-2": {
+    "file": "P2-2.wav",
+    "text_hash": "db124f83c8e879bd"
+  },
+  "P2-3": {
+    "file": "P2-3.wav",
+    "text_hash": "2bc73436af8d31d5"
+  },
+  "P3-1": {
+    "file": "P3-1.wav",
+    "text_hash": "4b7ae528173208ad"
+  },
+  "P3-2": {
+    "file": "P3-2.wav",
+    "text_hash": "7414478a104a2b7c"
+  }
+}

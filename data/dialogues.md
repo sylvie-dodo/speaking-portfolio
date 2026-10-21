@@ -1,16 +1,16 @@
 **1** 
 
-**A: Qu'est ce que vous faites le matin ? Quelle est votre routine le matin ?**
+**A: Qu'est-ce que vous faites le matin ? Quelle est votre routine le matin ?**
 
 B : Le matin, je me réveille et je déjeune, ensuite je prends ma douche et je regarde mes mails et comme je suis dans un milieu artistique, je commence à dessiner des choses comme ça.
 
-**A : Est ce que le matin vous avez une routine particulière ?**
+**A : Est-ce que le matin vous avez une routine particulière ?**
 
 B : Oui, je me lève, après c'est le téléphone, les réseaux sociaux, pour voir les actualités. Et puis, je me prépare, je me douche, c’est ma routine du matin. Je fais sortir mes chiens aussi.
 
 **2**
 
-**A : Qu'est ce que vous faites en premier le matin après vous être levé ?** 
+**A : Qu'est-ce que vous faites en premier le matin après vous être levé ?** 
 
 B : C'est malheureux, mais la première chose que je fais, c'est le smartphone. Je regarde mon téléphone portable, je vais sur les réseaux sociaux, voilà.
 
@@ -24,7 +24,7 @@ B : Non, même pas. Je remonte sur mes fils d’actualité, sur mon mur, de face
 
 B : Malheureusement, non, il faudrait que je mette le téléphone ailleurs, mais pour l’instant, c’est la première chose que je fais.
 
-**A : Et après, qu'est ce que vous faites quand vous avez fait ça ?** 
+**A : Et après, qu'est-ce que vous faites quand vous avez fait ça ?** 
 
 B : Un café. Et puis après, on commence la journée. 
 

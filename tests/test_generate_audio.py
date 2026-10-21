@@ -40,6 +40,7 @@ def test_match_voice_prefers_exact_then_unique_prefix():
 
 def test_audio_attaches_only_when_text_unchanged():
     d1, d2 = json.loads(json.dumps(DATA[:2]))
+    d1["audio"] = d2["audio"] = None
     manifest = {d1["id"]: {"file": "a.wav", "text_hash": text_hash(d1)},
                 d2["id"]: {"file": "b.wav", "text_hash": "old"}}
     stale = attach_audio([d1, d2], manifest)
