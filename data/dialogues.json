@@ -86,7 +86,7 @@
         "n": 2,
         "speaker": "B",
         "name": "B",
-        "text": "C'est malheureux mais smartphones la première chose que je fais. Je regarde mon téléphone portable, je vais sur les réseaux sociaux, voilà."
+        "text": "C'est malheureux, mais la première chose que je fais, c'est le smartphone. Je regarde mon téléphone portable, je vais sur les réseaux sociaux, voilà."
       },
       {
         "n": 3,
@@ -110,7 +110,7 @@
       {
         "n": 2,
         "unit": 2,
-        "text": "C'est malheureux mais smartphones la première chose que je fais."
+        "text": "C'est malheureux, mais la première chose que je fais, c'est le smartphone."
       },
       {
         "n": 3,
@@ -504,7 +504,7 @@
         "n": 4,
         "speaker": "C",
         "name": "Medhi",
-        "text": "Orange pour le soir ? Hmm… Appelle la vendeuse !"
+        "text": "Orange pour le soir ? Appelle la vendeuse !"
       },
       {
         "n": 5,
@@ -528,7 +528,7 @@
         "n": 8,
         "speaker": "B",
         "name": "La vendeuse",
-        "text": "Voilà un Trente-huit. !"
+        "text": "Voilà un trente-huit !"
       },
       {
         "n": 9,
@@ -571,55 +571,50 @@
       {
         "n": 7,
         "unit": 4,
-        "text": "Hmm…"
-      },
-      {
-        "n": 8,
-        "unit": 4,
         "text": "Appelle la vendeuse !"
       },
       {
-        "n": 9,
+        "n": 8,
         "unit": 5,
         "text": "Excusez-moi."
       },
       {
-        "n": 10,
+        "n": 9,
         "unit": 5,
         "text": "Je peux essayer cette jupe bleue ?"
       },
       {
-        "n": 11,
+        "n": 10,
         "unit": 6,
         "text": "Bien sûr."
       },
       {
-        "n": 12,
+        "n": 11,
         "unit": 6,
         "text": "Quelle est votre taille ?"
       },
       {
-        "n": 13,
+        "n": 12,
         "unit": 7,
         "text": "Trente-huit."
       },
       {
-        "n": 14,
+        "n": 13,
         "unit": 8,
-        "text": "Voilà un Trente-huit. !"
+        "text": "Voilà un trente-huit !"
       },
       {
-        "n": 15,
+        "n": 14,
         "unit": 9,
         "text": "Merci !"
       },
       {
-        "n": 16,
+        "n": 15,
         "unit": 9,
         "text": "Regarde, elle est parfaite !"
       },
       {
-        "n": 17,
+        "n": 16,
         "unit": 9,
         "text": "Je suis élégante !"
       }

@@ -12,7 +12,7 @@ B : Oui, je me lève, après c'est le téléphone, les réseaux sociaux, pour vo
 
 **A : Qu'est ce que vous faites en premier le matin après vous être levé ?** 
 
-B : C'est malheureux mais smartphones la première chose que je fais. Je regarde mon téléphone portable, je vais sur les réseaux sociaux, voilà.
+B : C'est malheureux, mais la première chose que je fais, c'est le smartphone. Je regarde mon téléphone portable, je vais sur les réseaux sociaux, voilà.
 
 **A : Vous regardez vos messages, vos mails ?** 
 
@@ -69,11 +69,11 @@ La vendeuse : Elles sont sous les vêtements, entre les sandales et les chaussur
 7  
 Cécile : Ils ont des vêtements magnifiques et de belles chaussures \!   
 Medhi : C’est cher, non ?   
-Cécile : Mais non \! Regarde, elle est bien cette jupe bleue ? Et ce petit top, pour le soir ? Medhi : Orange pour le soir ? Hmm… Appelle la vendeuse \!   
+Cécile : Mais non \! Regarde, elle est bien cette jupe bleue ? Et ce petit top, pour le soir ? Medhi : Orange pour le soir ? Appelle la vendeuse \!   
 Cécile : Excusez-moi. Je peux essayer cette jupe bleue ?   
 La vendeuse : Bien sûr. Quelle est votre taille ?  
 Cécile : Trente-huit.  
-La vendeuse : Voilà un Trente-huit. \!   
+La vendeuse : Voilà un trente-huit \!   
 Cécile : Merci \! Regarde, elle est parfaite \! Je suis élégante \! 
 
 8  
