@@ -694,3 +694,27 @@ test("dashboard separates optional practice completion and plays every practice 
   assert.equal(a.audios[1].paused, true);
   assert.equal(warnsOnClose(a), false);
 });
+
+test("exam with one dialogue per part walks through all three and back", async (t) => {
+  const a = app(t); await a.enter();
+  const picked = [dialogues[0], dialogues[5], dialogues[8]];
+  // 다음 대화 버튼은 모든 단위를 녹음해야 열리므로 녹음된 상태로 시작한다.
+  const recordings = Object.fromEntries(picked.map((d, di) => [di, Object.fromEntries(d.units.map((_, i) => [i, { blob: new a.w.Blob(), duration: 1 }]))]));
+  Object.assign(a.w.testing.state, { mode: "exam", dialogues: picked, current: 0, recordings });
+  a.w.testing.showRecordScreen();
+  assert.match(a.$("record-title").textContent, /^대화 1 \/ 3/);
+  assert.equal(a.$("btn-prev-dialogue").hidden, true);
+  a.$("btn-next").click();
+  assert.match(a.$("record-title").textContent, /^대화 2 \/ 3/);
+  assert.equal(a.$("btn-next").textContent, "다음 대화 녹음하기");
+  a.$("btn-next").click();
+  assert.match(a.$("record-title").textContent, /^대화 3 \/ 3/);
+  assert.equal(a.$("btn-next").textContent, "제출 준비하기");
+  assert.equal(a.$("btn-prev-dialogue").textContent, "대화 2 녹음하기");
+  a.$("btn-prev-dialogue").click();
+  assert.match(a.$("record-title").textContent, /^대화 2 \/ 3/);
+  // 독백은 화자 이름 없이, 대화는 화자 이름을 앞에 표시한다.
+  assert.match(a.$("unit-text-0").textContent, /^Cécile : /);
+  a.$("btn-next").click();
+  assert.equal(a.$("unit-text-0").querySelector(".speaker"), null);
+});

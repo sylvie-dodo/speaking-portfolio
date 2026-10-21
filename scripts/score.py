@@ -25,8 +25,14 @@ def dialogues() -> dict:
     return {d["id"]: d for d in json.loads((ROOT / "data" / "dialogues.json").read_text(encoding="utf-8"))}
 
 
+def exam_count() -> int:
+    """본 평가 편 수: 파트가 여럿이면 파트 수(파트마다 1편), 아니면 2편."""
+    parts = {d.get("part") for d in dialogues().values()}
+    return len(parts) if len(parts) > 1 else 2
+
+
 def collect(folder: Path) -> dict:
-    """본 평가(idx 1·2)는 dialogues에, 모의(idx가 시각 스탬프)는 practice 목록에 모은다."""
+    """본 평가(idx 1, 2, …)는 dialogues에, 모의(idx가 시각 스탬프)는 practice 목록에 모은다."""
     students = {}
     for meta in sorted(folder.glob("**/3-*/*.json")):
         if meta.name.endswith(".scribe.json"):
@@ -68,6 +74,7 @@ def detail(cls, num, name, which, did, e):
 def run(folder: Path, out: Path, cfg: dict, note_cfg: dict | None = None):
     students = collect(folder)
     absent = missing(folder)
+    n = exam_count()
     detail_rows = []
     by_class = {}
     for (cls, num), s in sorted(students.items()):
@@ -79,7 +86,7 @@ def run(folder: Path, out: Path, cfg: dict, note_cfg: dict | None = None):
             continue
         row = {"번호": num, "이름": s["name"], "최종": 0, "비고": [], "제출시각": ""}
         scores = []
-        for idx in (1, 2):
+        for idx in range(1, n + 1):
             d = s["dialogues"].get(idx)
             if not d:
                 row[f"대화{idx}"] = ""; row[f"만족{idx}"] = ""; row[f"점수{idx}"] = 0; scores.append(0)
@@ -95,21 +102,21 @@ def run(folder: Path, out: Path, cfg: dict, note_cfg: dict | None = None):
             if bad:
                 row["비고"].append(f"대화{idx} 불만족 {','.join(bad)}")
             detail_rows += [detail(cls, num, s["name"], idx, d["id"], e) for e in r["expressions"]]
-        row["최종"] = final_score(scores) if len(scores) == 2 else ""
-        if note_cfg is not None and len(scores) == 2:
+        row["최종"] = final_score(scores) if len(scores) == n else ""
+        if note_cfg is not None and len(scores) == n:
             alt = [score_dialogue(dialogues()[d["id"]], d["scribe"], d["turn_offsets"], note_cfg)["score"]
-                   if d and d["scribe"] is not None else 0 for d in (s["dialogues"].get(1), s["dialogues"].get(2))]
+                   if d and d["scribe"] is not None else 0 for d in (s["dialogues"].get(i) for i in range(1, n + 1))]
             alt_final = final_score(alt)
             if alt_final != row["최종"]:
                 row["비고"].append(f"후한 기준 적용 시 {alt_final}점")
         row["비고"] = "; ".join(row["비고"])
         by_class.setdefault(cls, []).append(row)
     for (cls, num), name in absent.items():
-        by_class.setdefault(cls, []).append({"번호": num, "이름": name, "대화1": "", "만족1": "", "점수1": 0,
-                                             "대화2": "", "만족2": "", "점수2": 0, "최종": 0, "비고": "미제출", "제출시각": ""})
+        empty = {f"{k}{i}": ("" if k != "점수" else 0) for i in range(1, n + 1) for k in ("대화", "만족", "점수")}
+        by_class.setdefault(cls, []).append({"번호": num, "이름": name, **empty, "최종": 0, "비고": "미제출", "제출시각": ""})
 
     out.mkdir(parents=True, exist_ok=True)
-    cols = ["번호", "이름", "대화1", "만족1", "점수1", "대화2", "만족2", "점수2", "최종", "비고", "제출시각"]
+    cols = ["번호", "이름", *[f"{k}{i}" for i in range(1, n + 1) for k in ("대화", "만족", "점수")], "최종", "비고", "제출시각"]
     for cls, rows in sorted(by_class.items()):
         wb = Workbook(); ws = wb.active; ws.title = f"3-{cls}"
         ws.append(cols)

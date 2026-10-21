@@ -749,5 +749,93 @@
         "text": "Suivez-moi !"
       }
     ]
+  },
+  {
+    "id": "P3-1",
+    "part": 3,
+    "title": "Monologue (1)",
+    "source": "Partie 3 / Dialogue 9",
+    "audio": null,
+    "units": [
+      {
+        "n": 1,
+        "speaker": "A",
+        "name": "",
+        "text": "J'achète les fruits et les légumes au marché."
+      },
+      {
+        "n": 2,
+        "speaker": "A",
+        "name": "",
+        "text": "Au supermarché, j'achète des pâtes, de la viande et du lait."
+      },
+      {
+        "n": 3,
+        "speaker": "A",
+        "name": "",
+        "text": "Et vous, quand vous faites les courses, qu'est-ce que vous achetez ?"
+      }
+    ],
+    "expressions": [
+      {
+        "n": 1,
+        "unit": 1,
+        "text": "J'achète les fruits et les légumes au marché."
+      },
+      {
+        "n": 2,
+        "unit": 2,
+        "text": "Au supermarché, j'achète des pâtes, de la viande et du lait."
+      },
+      {
+        "n": 3,
+        "unit": 3,
+        "text": "Et vous, quand vous faites les courses, qu'est-ce que vous achetez ?"
+      }
+    ]
+  },
+  {
+    "id": "P3-2",
+    "part": 3,
+    "title": "Monologue (2)",
+    "source": "Partie 3 / Dialogue 10",
+    "audio": null,
+    "units": [
+      {
+        "n": 1,
+        "speaker": "A",
+        "name": "",
+        "text": "Le poulet Palava est une spécialité du Nigéria."
+      },
+      {
+        "n": 2,
+        "speaker": "A",
+        "name": "",
+        "text": "Dans le poulet Palava, il y a du poulet avec des épinards, des tomates et de la purée de cacahuète."
+      },
+      {
+        "n": 3,
+        "speaker": "A",
+        "name": "",
+        "text": "Nous mangeons cette spécialité le dimanche, avec ma famille."
+      }
+    ],
+    "expressions": [
+      {
+        "n": 1,
+        "unit": 1,
+        "text": "Le poulet Palava est une spécialité du Nigéria."
+      },
+      {
+        "n": 2,
+        "unit": 2,
+        "text": "Dans le poulet Palava, il y a du poulet avec des épinards, des tomates et de la purée de cacahuète."
+      },
+      {
+        "n": 3,
+        "unit": 3,
+        "text": "Nous mangeons cette spécialité le dimanche, avec ma famille."
+      }
+    ]
   }
 ]

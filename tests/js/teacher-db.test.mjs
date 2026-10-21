@@ -395,3 +395,19 @@ test("resolve_student는 학번과 이름이 모두 맞을 때만 반·번호를
   assert.equal(row.student_id, "S001");
   assert.equal(row.grade, 1);
 });
+
+test("본 평가 제출은 대화 2~3편을 받고 편 수와 파일 수가 맞아야 한다", async () => {
+  await db.exec("reset role;");
+  const insert = (ids, files, durations) => db.query(
+    "insert into public.submissions(class,number,name,dialogue_ids,turn_offsets,files,durations) values (2,1,'학생 셋',$1,'[]',$2,$3)",
+    [ids, files, durations]);
+  try {
+    await insert(["P1-1", "P2-1", "P3-1"], ["a.wav", "b.wav", "c.wav"], [1, 2, 3]);
+    await db.exec("delete from public.submissions where class = 2 and number = 1;");
+    await assert.rejects(insert(["P1-1", "P2-1", "P3-1"], ["a.wav", "b.wav"], [1, 2]));
+    await assert.rejects(insert(["P1-1"], ["a.wav"], [1]));
+    await assert.rejects(insert(["P1-1", "P2-1", "P3-1", "P3-2"], ["a", "b", "c", "d"], [1, 2, 3, 4]));
+  } finally {
+    await db.exec("delete from public.submissions where class = 2 and number = 1; set role anon;");
+  }
+});

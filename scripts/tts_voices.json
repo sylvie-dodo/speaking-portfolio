@@ -1,0 +1,16 @@
+{
+  "model_id": "eleven_multilingual_v2",
+  "output_format": "pcm_22050",
+  "pause_sec": 0.7,
+  "voices": {
+    "A": "EXAVITQu4vr4xnSDxMaL",
+    "B": "JBFqnCBsd6RMkjVDRZzb",
+    "C": "ErXwobaYiN019PkySvjV"
+  },
+  "by_name": {
+    "Cécile": "XB0fDUnXU5powFXDhCwa",
+    "La vendeuse": "EXAVITQu4vr4xnSDxMaL",
+    "Medhi": "ErXwobaYiN019PkySvjV",
+    "": "XB0fDUnXU5powFXDhCwa"
+  }
+}

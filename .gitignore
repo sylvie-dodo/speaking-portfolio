@@ -9,3 +9,5 @@ tests/fixtures/*.wav
 supabase/.temp/
 .sanitize.local.md
 .venv/
+tts_cache/
+audio_out/

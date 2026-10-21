@@ -48,7 +48,7 @@ function showMode() {
     ? "평가 참여가 마감되었습니다. 내 점수는 확인할 수 있습니다."
     : state.examSubmitted
     ? "본 평가를 이미 제출했습니다. 모의 평가만 할 수 있습니다."
-    : "본 평가는 대화 2편을 녹음하고 한 번만 제출할 수 있습니다.";
+    : "본 평가는 파트마다 1편씩 녹음하고 한 번만 제출할 수 있습니다.";
   showScreen("screen-mode");
 }
 
@@ -173,9 +173,9 @@ async function chooseMode(mode, button = $(mode === "exam" ? "btn-exam" : "btn-p
     state.built = null;
     $("btn-mic-next").disabled = true;
     if (mode === "exam") {
-      const [a, b] = await drawExam(state.cls, state.num, partGroups(DIALOGUES));
+      const picks = await drawExam(state.cls, state.num, partGroups(DIALOGUES));
       if (version !== sessionVersion) return;
-      state.dialogues = [DIALOGUES[a], DIALOGUES[b]];
+      state.dialogues = picks.map((i) => DIALOGUES[i]);
     } else {
       state.dialogues = [DIALOGUES[drawPractice(DIALOGUES.length)]];
     }
@@ -302,11 +302,12 @@ export function showRecordScreen() {
   const isExam = state.mode === "exam";
   stopPlayAll();
   stopUnitPlayback();
-  $("record-title").textContent = `${isExam ? `대화 ${state.current + 1} / 2` : "모의 평가"}: ${d.title}`;
+  $("record-title").textContent = `${isExam ? `대화 ${state.current + 1} / ${state.dialogues.length}` : "모의 평가"}: ${d.title}`;
   $("record-source").textContent = d.source;
   $("btn-play-all").hidden = !d.audio;
-  $("btn-prev-dialogue").hidden = !(isExam && state.current === 1);
-  $("btn-next").textContent = (isExam && state.current === 0) ? "다음 대화 녹음하기" : "제출 준비하기";
+  $("btn-prev-dialogue").hidden = !(isExam && state.current > 0);
+  $("btn-prev-dialogue").textContent = `대화 ${state.current} 녹음하기`;
+  $("btn-next").textContent = (isExam && state.current < state.dialogues.length - 1) ? "다음 대화 녹음하기" : "제출 준비하기";
   state.recordings[state.current] = state.recordings[state.current] || {};
   renderUnits();
   showScreen("screen-record");
@@ -469,12 +470,12 @@ $("btn-play-all").addEventListener("click", async () => {
   } catch (err) { if (version === playAllVersion) { stopPlayAll(); announce("음원을 불러오지 못했습니다"); console.error(err); } }
 });
 
-$("btn-prev-dialogue").addEventListener("click", () => { state.current = 0; showRecordScreen(); });
+$("btn-prev-dialogue").addEventListener("click", () => { state.current = Math.max(0, state.current - 1); showRecordScreen(); });
 
 $("btn-next").addEventListener("click", () => {
   stopPlayAll();
   stopUnitPlayback();
-  if (state.mode === "exam" && state.current === 0) { state.current = 1; showRecordScreen(); }
+  if (state.mode === "exam" && state.current < state.dialogues.length - 1) { state.current += 1; showRecordScreen(); }
   else showSubmitScreen();
 });
 

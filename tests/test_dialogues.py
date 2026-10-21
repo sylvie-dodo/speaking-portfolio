@@ -6,7 +6,7 @@ import pytest
 from scoring import canonical
 
 DATA = Path(__file__).resolve().parents[1] / "data" / "dialogues.json"
-IDS = ["P1-1", "P1-2", "P1-3", "P1-4", "P1-5", "P2-1", "P2-2", "P2-3"]
+IDS = ["P1-1", "P1-2", "P1-3", "P1-4", "P1-5", "P2-1", "P2-2", "P2-3", "P3-1", "P3-2"]
 
 pytestmark = pytest.mark.skipif(not DATA.exists(), reason="data/dialogues.json 없음: scripts/build_dialogues.py 실행 필요")
 
@@ -18,7 +18,7 @@ def load():
 def test_ids_parts_and_order():
     data = load()
     assert [d["id"] for d in data] == IDS
-    assert [d["part"] for d in data] == [1] * 5 + [2] * 3
+    assert [d["part"] for d in data] == [1] * 5 + [2] * 3 + [3] * 2
 
 
 def test_expressions_numbered_and_mapped_to_units():
@@ -46,7 +46,8 @@ def test_speakers_keep_one_key_per_name_within_a_part():
     keys = {}
     for d in load():
         for u in d["units"]:
-            assert u["speaker"] in {"A", "B", "C"} and u["name"] and u["text"]
+            assert u["speaker"] in {"A", "B", "C"} and u["text"]
+            assert bool(u["name"]) == (d["part"] != 3), (d["id"], u["n"])  # 독백(파트 3)만 화자 이름이 없다
             assert keys.setdefault((d["part"], u["name"]), u["speaker"]) == u["speaker"], (d["id"], u["name"])
 
 
@@ -54,3 +55,9 @@ def test_no_markdown_leftovers():
     for d in load():
         for u in d["units"]:
             assert "**" not in u["text"] and "\\" not in u["text"], (d["id"], u["n"])
+
+
+def test_monologues_split_one_sentence_per_unit():
+    for d in load():
+        if d["part"] == 3:
+            assert len(d["units"]) == len(d["expressions"]) == 3, d["id"]

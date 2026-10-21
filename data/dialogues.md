@@ -86,3 +86,10 @@ Cécile : Les talons sont hauts mais elles sont confortables. Je prends la jupe 
 Medhi : Allez Cécile, je paye \!   
 Cécile : Ah non, c’est moi \! Et vous avez des chapeaux ?   
 La vendeuse : Oui, regardez, devant la caisse. Suivez-moi \! 
+---
+
+9  
+J'achète les fruits et les légumes au marché. Au supermarché, j'achète des pâtes, de la viande et du lait. Et vous, quand vous faites les courses, qu'est-ce que vous achetez ?
+
+10  
+Le poulet Palava est une spécialité du Nigéria. Dans le poulet Palava, il y a du poulet avec des épinards, des tomates et de la purée de cacahuète. Nous mangeons cette spécialité le dimanche, avec ma famille.

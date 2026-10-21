@@ -3,17 +3,19 @@ r"""대화문 원문 Markdown으로 data/dialogues.json을 만든다.
 원문 형식: 파트는 `---` 줄로 나눈다. 각 대화는 번호만 있는 줄(`**1**`, `6`)로 시작하고,
 대사는 `화자 : 대사` 꼴이다. 굵게 표시(`**`)와 Markdown 이스케이프(`\!`)는 지운다.
 한 줄에 다른 화자의 대사가 붙어 있으면(`... ? Medhi : ...`) 나눈다.
+화자 표시가 하나도 없는 대화는 독백으로 보고 문장마다 녹음 단위로 나눈다.
 채점 표현은 대사를 문장 단위(. ! ? … 뒤)로 나눈 것이다.
 
 사용: python scripts/build_dialogues.py [원문 경로]   (기본 data/dialogues.md)
 """
+import hashlib
 import json
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PART_TITLES = {1: "La routine du matin", 2: "Dans une boutique"}
+PART_TITLES = {1: "La routine du matin", 2: "Dans une boutique", 3: "Monologue"}
 SPEAKER_KEYS = "ABC"
 
 NUMBER_RE = re.compile(r"^\s*(\d+)\s*$")
@@ -41,6 +43,9 @@ def sentences(text: str) -> list[str]:
 def parse_section(lines: list[str], keys: dict) -> list[dict]:
     """keys: 파트 안에서 화자 이름 → 표시 키(A·B·C). 같은 인물은 파트 내내 같은 색을 쓴다."""
     raw = [m.groups() for m in (LINE_RE.match(l) for l in lines) if m]
+    if not raw:  # 독백: 화자 표시가 없으면 문장마다 녹음 단위로 나누고 이름은 표시하지 않는다.
+        texts = [t for l in lines for t in sentences(l)]
+        return [{"n": i + 1, "speaker": "A", "name": "", "text": t} for i, t in enumerate(texts)]
     if len(raw) != len(lines):
         bad = [l for l in lines if not LINE_RE.match(l)]
         raise SystemExit(f"화자를 찾을 수 없는 줄: {bad}")
@@ -58,6 +63,24 @@ def parse_section(lines: list[str], keys: dict) -> list[dict]:
             keys[u["speaker"]] = SPEAKER_KEYS[len(keys)]
     return [{"n": i + 1, "speaker": keys[u["speaker"]], "name": u["speaker"], "text": u["text"]}
             for i, u in enumerate(units)]
+
+
+def text_hash(d: dict) -> str:
+    """편의 대사·화자가 바뀌면 달라지는 값. 음원이 현재 대사와 맞는지 확인하는 데 쓴다."""
+    body = json.dumps([[u.get("name", ""), u["speaker"], u["text"]] for u in d["units"]], ensure_ascii=False)
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
+
+
+def attach_audio(data: list[dict], manifest: dict) -> list[str]:
+    """data/audio.json에 기록된 음원 중 대사가 그대로인 편에만 audio를 연결한다. 어긋난 편 ID를 돌려준다."""
+    stale = []
+    for d in data:
+        entry = manifest.get(d["id"])
+        if entry and entry["text_hash"] == text_hash(d):
+            d["audio"] = entry["file"]
+        elif entry:
+            stale.append(d["id"])
+    return stale
 
 
 def build(md_path: Path) -> list[dict]:
@@ -92,6 +115,11 @@ def main():
         raise SystemExit(__doc__)
     src = Path(sys.argv[1]) if len(sys.argv) == 2 else ROOT / "data" / "dialogues.md"
     data = build(src)
+    audio_manifest = ROOT / "data" / "audio.json"
+    if audio_manifest.exists():
+        stale = attach_audio(data, json.loads(audio_manifest.read_text(encoding="utf-8")))
+        if stale:
+            print(f"대사가 바뀌어 음원을 연결하지 않은 편: {', '.join(stale)} (scripts/generate_audio.py로 다시 만드세요)")
     target = ROOT / "data" / "dialogues.json"
     target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     by_part = {}

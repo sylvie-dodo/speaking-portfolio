@@ -17,8 +17,9 @@
 ## 구조
 
 - `index.html`, `styles.css`, `app.js`, `lib/` : 웹앱(빌드 없음, ES modules). 화면 로직은 `app.js`, Supabase 연동은 `lib/supa.js`에 둔다. `config.js`는 gitignore, `config.example.js`를 복사해 채운다.
-- `data/dialogues.md` : 대화문 원문(프랑스어 8편, 파트 1은 1~5번, 파트 2는 6~8번). `---` 줄로 파트를 나눈다.
-- `data/dialogues.json` : `python scripts/build_dialogues.py`로 원문에서 생성하며 손으로 고치지 않는다. 본 평가는 파트마다 1편씩 2편을 추첨하고, 채점 표현은 문장 단위다.
+- `data/dialogues.md` : 대화문 원문(프랑스어 10편, 파트 1은 1~5번 인터뷰, 파트 2는 6~8번 옷가게, 파트 3은 9~10번 독백). `---` 줄로 파트를 나눈다.
+- `data/dialogues.json` : `python scripts/build_dialogues.py`로 원문에서 생성하며 손으로 고치지 않는다. 본 평가는 파트마다 1편씩 3편을 추첨하고, 채점 표현은 문장 단위다.
+- `scripts/generate_audio.py` : ElevenLabs 음성 합성으로 편별 WAV 음원을 만들어 audio 버킷에 올리고 `data/audio.json`에 기록한다. 목소리는 `scripts/tts_voices.json`.
 - `supabase/migrations/` : 스키마·RLS·함수.
 - `scripts/` : 교사 스크립트. `.env`(gitignore)에서 키를 읽는다.
 - `tests/` : pytest(`tests/test_*.py`), node --test(`tests/js/*.test.mjs`).
