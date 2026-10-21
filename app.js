@@ -136,7 +136,8 @@ $("btn-score-back").addEventListener("click", () => { scoreRequest++; showMode()
 
 async function loadDialogues() {
   if (DIALOGUES.length) return;
-  DIALOGUES = await (await fetch("data/dialogues.json")).json();
+  // 대사·음원 이름이 바뀌면 바로 반영되도록 브라우저 캐시를 서버와 대조한다.
+  DIALOGUES = await (await fetch("data/dialogues.json", { cache: "no-cache" })).json();
 }
 
 let modeBusy = false;

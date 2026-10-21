@@ -4,7 +4,7 @@ import wave
 from pathlib import Path
 
 from build_dialogues import attach_audio, text_hash
-from generate_audio import CONFIG, assemble, match_voice, sample_rate, tts_text, voice_for
+from generate_audio import CONFIG, assemble, match_voice, sample_rate, tts_text, versioned_name, voice_for
 
 DATA = json.loads((Path(__file__).resolve().parents[1] / "data" / "dialogues.json").read_text(encoding="utf-8"))
 
@@ -52,3 +52,9 @@ def test_pronunciation_fixes_only_tts_input_and_keeps_capitals():
     assert tts_text("Quelle est votre taille ?", cfg) == "Quelle è votre taille ?"
     assert tts_text("Et vous, quelle est votre routine ?", cfg) == "Et vous, quelle è votre routine ?"
     assert tts_text("C'est cher, non ?", cfg) == "C'est cher, non ?"
+
+
+def test_uploaded_name_changes_with_audio_content():
+    a, b = versioned_name("P1-1", b"one"), versioned_name("P1-1", b"two")
+    assert a.startswith("P1-1-") and a.endswith(".wav") and a != b
+    assert versioned_name("P1-1", b"one") == a

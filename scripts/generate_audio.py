@@ -92,6 +92,10 @@ def tts_text(text: str, cfg: dict = CONFIG) -> str:
     return text
 
 
+def versioned_name(dialogue_id: str, wav: bytes) -> str:
+    return f"{dialogue_id}-{hashlib.sha256(wav).hexdigest()[:10]}.wav"
+
+
 def sample_rate(cfg: dict = CONFIG) -> int:
     return int(cfg["output_format"].rsplit("_", 1)[1])
 
@@ -163,13 +167,18 @@ def main():
     for d, names in zip(targets, plan):
         chunks = [synthesize(tts_text(u["text"]), ids[v], key) for u, v in zip(d["units"], names)]
         wav = assemble(chunks, sample_rate(), CONFIG["pause_sec"])
-        name = f"{d['id']}.wav"
-        (OUT / name).write_bytes(wav)
-        line = f"{d['id']}: {len(d['units'])}개 대사, {len(wav) // 1024} KB → audio_out/{name}"
+        local = f"{d['id']}.wav"
+        (OUT / local).write_bytes(wav)
+        line = f"{d['id']}: {len(d['units'])}개 대사, {len(wav) // 1024} KB → audio_out/{local}"
         if bucket is not None:
+            # 브라우저가 음원을 1시간 캐시하므로, 내용이 바뀌면 파일 이름도 바뀌게 내용 해시를 붙인다.
+            name = versioned_name(d["id"], wav)
+            old = manifest.get(d["id"], {}).get("file")
             bucket.upload(name, wav, {"content-type": "audio/wav", "upsert": "true"})
             manifest[d["id"]] = {"file": name, "text_hash": text_hash(d)}
-            line += " (업로드)"
+            if old and old != name:
+                bucket.remove([old])
+            line += f" (업로드: {name})"
         print(line)
     if upload:
         MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
