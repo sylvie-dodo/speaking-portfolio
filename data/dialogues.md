@@ -1,6 +1,6 @@
 **1** 
 
-**A: Qu'est-ce que vous faites le matin ? Quelle est votre routine le matin ?**
+**A: Qu'est-ce que vous faites le matin ? Quelle est votre routine du matin ?**
 
 B : Le matin, je me réveille et je déjeune, ensuite je prends ma douche et je regarde mes mails et comme je suis dans un milieu artistique, je commence à dessiner des choses comme ça.
 

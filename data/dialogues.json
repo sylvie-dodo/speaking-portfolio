@@ -10,7 +10,7 @@
         "n": 1,
         "speaker": "A",
         "name": "A",
-        "text": "Qu'est-ce que vous faites le matin ? Quelle est votre routine le matin ?"
+        "text": "Qu'est-ce que vous faites le matin ? Quelle est votre routine du matin ?"
       },
       {
         "n": 2,
@@ -40,7 +40,7 @@
       {
         "n": 2,
         "unit": 1,
-        "text": "Quelle est votre routine le matin ?"
+        "text": "Quelle est votre routine du matin ?"
       },
       {
         "n": 3,
