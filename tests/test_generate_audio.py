@@ -4,7 +4,7 @@ import wave
 from pathlib import Path
 
 from build_dialogues import attach_audio, text_hash
-from generate_audio import CONFIG, assemble, match_voice, sample_rate, voice_for
+from generate_audio import CONFIG, assemble, match_voice, sample_rate, tts_text, voice_for
 
 DATA = json.loads((Path(__file__).resolve().parents[1] / "data" / "dialogues.json").read_text(encoding="utf-8"))
 
@@ -22,7 +22,7 @@ def test_voices_follow_the_chosen_cast():
     cast = lambda did: {(u["name"] or u["speaker"]): voice_for(by_id[did], u) for u in by_id[did]["units"]}
     assert cast("P1-1") == {"A": "Alice", "B": "George"}
     assert cast("P1-2") == {"A": "Alice", "B": "Daniel"}
-    assert cast("P2-2")["Cécile"] == "Alice" and cast("P2-2")["La vendeuse"] == "Eric" and cast("P2-2")["Medhi"] == "Chris"
+    assert cast("P2-2")["Cécile"] == "Alice" and cast("P2-2")["La vendeuse"] == "Lily" and cast("P2-2")["Medhi"] == "Chris"
     assert set(cast("P3-1").values()) == {"Brian"} and set(cast("P3-2").values()) == {"Lily"}
     for d in DATA:
         for u in d["units"]:
@@ -45,3 +45,10 @@ def test_audio_attaches_only_when_text_unchanged():
                 d2["id"]: {"file": "b.wav", "text_hash": "old"}}
     stale = attach_audio([d1, d2], manifest)
     assert d1["audio"] == "a.wav" and d2["audio"] is None and stale == [d2["id"]]
+
+
+def test_pronunciation_fixes_only_tts_input_and_keeps_capitals():
+    cfg = {"pronunciation": [["quelle est", "quelle è"]]}
+    assert tts_text("Quelle est votre taille ?", cfg) == "Quelle è votre taille ?"
+    assert tts_text("Et vous, quelle est votre routine ?", cfg) == "Et vous, quelle è votre routine ?"
+    assert tts_text("C'est cher, non ?", cfg) == "C'est cher, non ?"

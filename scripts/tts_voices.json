@@ -2,6 +2,16 @@
   "model_id": "eleven_multilingual_v2",
   "output_format": "pcm_22050",
   "pause_sec": 0.7,
+  "pronunciation": [
+    [
+      "Quelle est votre taille",
+      "Quelle è votre taille"
+    ],
+    [
+      "Quelle est votre pointure",
+      "Quelle ait votre pointure"
+    ]
+  ],
   "default": {
     "A": "Alice",
     "B": "George",
@@ -9,8 +19,8 @@
   },
   "by_name": {
     "Cécile": "Alice",
-    "La vendeuse": "Eric",
-    "Medhi": "Chris"
+    "Medhi": "Chris",
+    "La vendeuse": "Lily"
   },
   "by_dialogue": {
     "P1-2": {
@@ -31,9 +41,9 @@
     "B": "Jean Petit - Audiobook Narrator",
     "B (P1-2, P1-4)": "Guillaume - Natural Storytelling",
     "Cécile": "Camille Martin - Calm, Deep and Aged",
-    "La vendeuse": "Adina - Young, Welcoming and Joyful",
     "Medhi": "Nicolas Petit - Radio Host",
     "P3-1": "Paul K - Deep Engaging Storyteller",
-    "P3-2": "Victoria"
+    "P3-2": "Victoria",
+    "La vendeuse": "Adina - Young, Welcoming and Joyful"
   }
 }

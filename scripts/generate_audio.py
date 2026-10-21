@@ -3,6 +3,7 @@
 화자마다 다른 목소리를 쓴다. scripts/tts_voices.json에 ElevenLabs 목소리 이름을 적으며, 고르는 순서는
 by_dialogue(편별, 화자 이름 또는 독백은 "") → by_name(화자 이름) → default(화자 키 A·B·C)다.
 이름은 계정의 My Voices에서 찾고, 없으면 Voice Library에서 찾아 --add-voices일 때 My Voices에 추가한다.
+합성기가 잘못 읽는 표현은 pronunciation([원문, 읽힐 철자] 목록)으로 합성 입력에서만 바꾼다(화면·채점 원문은 그대로).
 대사마다 합성한 소리를 pause_sec 쉼으로 이어 붙인다. 합성 결과는 tts_cache/에 저장해 같은 대사를 다시 과금하지 않는다.
 올린 음원은 data/audio.json에 기록하고, build_dialogues.py가 대사가 바뀌지 않은 편에만 음원을 연결한다.
 
@@ -15,6 +16,7 @@ by_dialogue(편별, 화자 이름 또는 독백은 "") → by_name(화자 이름
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 import wave
@@ -79,6 +81,15 @@ def resolve_voices(names: set[str], key: str, add: bool) -> dict:
     if missing:
         raise SystemExit("목소리를 찾지 못했습니다: " + ", ".join(missing))
     return ids
+
+
+def tts_text(text: str, cfg: dict = CONFIG) -> str:
+    """합성 입력용 철자 보정. 대소문자를 가리지 않고 찾아, 첫 글자가 대문자였으면 대문자로 둔다."""
+    for src, dst in cfg.get("pronunciation", []):
+        def repl(m, dst=dst):
+            return dst[:1].upper() + dst[1:] if m.group(0)[:1].isupper() else dst
+        text = re.sub(re.escape(src), repl, text, flags=re.IGNORECASE)
+    return text
 
 
 def sample_rate(cfg: dict = CONFIG) -> int:
@@ -150,7 +161,7 @@ def main():
         from common import service_client
         bucket = service_client().storage.from_("audio")
     for d, names in zip(targets, plan):
-        chunks = [synthesize(u["text"], ids[v], key) for u, v in zip(d["units"], names)]
+        chunks = [synthesize(tts_text(u["text"]), ids[v], key) for u, v in zip(d["units"], names)]
         wav = assemble(chunks, sample_rate(), CONFIG["pause_sec"])
         name = f"{d['id']}.wav"
         (OUT / name).write_bytes(wav)
