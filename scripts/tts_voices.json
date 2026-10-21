@@ -8,24 +8,32 @@
     "C": "Chris"
   },
   "by_name": {
-    "Cécile": "Sarah",
-    "La vendeuse": "Bella",
+    "Cécile": "Alice",
+    "La vendeuse": "Lily",
     "Medhi": "Chris"
   },
   "by_dialogue": {
-    "P1-2": {"B": "Daniel"},
-    "P1-4": {"B": "Daniel"},
-    "P3-1": {"": "Brian"},
-    "P3-2": {"": "Lily"}
+    "P1-2": {
+      "B": "Daniel"
+    },
+    "P1-4": {
+      "B": "Daniel"
+    },
+    "P3-1": {
+      "": "Brian"
+    },
+    "P3-2": {
+      "": "Lily"
+    }
   },
   "library_cast_for_paid_plan": {
-    "Alice": "Adina - Young, Welcoming and Joyful",
-    "George": "Jean Petit - Audiobook Narrator",
-    "Daniel": "Guillaume - Natural Storytelling",
-    "Sarah": "Camille Martin - Calm, Deep and Aged",
-    "Bella": "Adina - Young, Welcoming and Joyful",
-    "Chris": "Nicolas Petit - Radio Host",
-    "Brian": "Paul K - Deep Engaging Storyteller",
-    "Lily": "Victoria"
+    "A": "Adina - Young, Welcoming and Joyful",
+    "B": "Jean Petit - Audiobook Narrator",
+    "B (P1-2, P1-4)": "Guillaume - Natural Storytelling",
+    "Cécile": "Camille Martin - Calm, Deep and Aged",
+    "La vendeuse": "Adina - Young, Welcoming and Joyful",
+    "Medhi": "Nicolas Petit - Radio Host",
+    "P3-1": "Paul K - Deep Engaging Storyteller",
+    "P3-2": "Victoria"
   }
 }
