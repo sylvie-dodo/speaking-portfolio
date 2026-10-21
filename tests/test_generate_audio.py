@@ -4,7 +4,7 @@ import wave
 from pathlib import Path
 
 from build_dialogues import attach_audio, text_hash
-from generate_audio import CONFIG, assemble, sample_rate, voice_for
+from generate_audio import CONFIG, assemble, match_voice, sample_rate, voice_for
 
 DATA = json.loads((Path(__file__).resolve().parents[1] / "data" / "dialogues.json").read_text(encoding="utf-8"))
 
@@ -17,13 +17,25 @@ def test_assemble_joins_chunks_with_pauses():
         assert w.getnframes() == 300 + 100 + 500 + 50 + 300  # 앞 쉼 + 대사 + 쉼 + 대사 + 뒤 쉼
 
 
-def test_every_speaker_has_a_voice_and_named_speakers_differ():
+def test_voices_follow_the_chosen_cast():
+    by_id = {d["id"]: d for d in DATA}
+    cast = lambda did: {(u["name"] or u["speaker"]): voice_for(by_id[did], u) for u in by_id[did]["units"]}
+    assert cast("P1-1") == {"A": "Adina", "B": "Jean Petit"}
+    assert cast("P1-2") == {"A": "Adina", "B": "Guillaume"}
+    assert cast("P2-2")["Cécile"] == "Camille Martin" and cast("P2-2")["Medhi"] == "Nicolas Petit"
+    assert set(cast("P3-1").values()) == {"Paul K"} and set(cast("P3-2").values()) == {"Victoria"}
     for d in DATA:
         for u in d["units"]:
-            assert voice_for(u)
-    shop = {u["name"]: voice_for(u) for d in DATA if d["part"] == 2 for u in d["units"]}
-    assert len(set(shop.values())) == len(shop) == 3
+            assert voice_for(d, u)
     assert sample_rate() == int(CONFIG["output_format"].split("_")[1])
+
+
+def test_match_voice_prefers_exact_then_unique_prefix():
+    voices = [{"name": "Victoria"}, {"name": "Paul K - narrator"}, {"name": "Jean Petit"}, {"name": "Jean Petitjean"}]
+    assert match_voice("victoria", voices)["name"] == "Victoria"
+    assert match_voice("Paul K", voices)["name"] == "Paul K - narrator"
+    assert match_voice("Jean Petit", voices)["name"] == "Jean Petit"
+    assert match_voice("Nobody", voices) is None
 
 
 def test_audio_attaches_only_when_text_unchanged():

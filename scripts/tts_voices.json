@@ -2,15 +2,20 @@
   "model_id": "eleven_multilingual_v2",
   "output_format": "pcm_22050",
   "pause_sec": 0.7,
-  "voices": {
-    "A": "EXAVITQu4vr4xnSDxMaL",
-    "B": "JBFqnCBsd6RMkjVDRZzb",
-    "C": "ErXwobaYiN019PkySvjV"
+  "default": {
+    "A": "Adina",
+    "B": "Jean Petit",
+    "C": "Nicolas Petit"
   },
   "by_name": {
-    "Cécile": "XB0fDUnXU5powFXDhCwa",
-    "La vendeuse": "EXAVITQu4vr4xnSDxMaL",
-    "Medhi": "ErXwobaYiN019PkySvjV",
-    "": "XB0fDUnXU5powFXDhCwa"
+    "Cécile": "Camille Martin",
+    "La vendeuse": "Adina",
+    "Medhi": "Nicolas Petit"
+  },
+  "by_dialogue": {
+    "P1-2": {"B": "Guillaume"},
+    "P1-4": {"B": "Guillaume"},
+    "P3-1": {"": "Paul K"},
+    "P3-2": {"": "Victoria"}
   }
 }

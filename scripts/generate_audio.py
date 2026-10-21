@@ -1,12 +1,15 @@
 """대화문을 ElevenLabs 음성 합성으로 읽어 편마다 WAV 음원을 만들고 audio 버킷에 올린다.
 
-화자마다 다른 목소리를 쓴다(scripts/tts_voices.json: 이름별 by_name이 우선, 없으면 화자 키 A·B·C별 voices).
+화자마다 다른 목소리를 쓴다. scripts/tts_voices.json에 ElevenLabs 목소리 이름을 적으며, 고르는 순서는
+by_dialogue(편별, 화자 이름 또는 독백은 "") → by_name(화자 이름) → default(화자 키 A·B·C)다.
+이름은 계정의 My Voices에서 찾고, 없으면 Voice Library에서 찾아 --add-voices일 때 My Voices에 추가한다.
 대사마다 합성한 소리를 pause_sec 쉼으로 이어 붙인다. 합성 결과는 tts_cache/에 저장해 같은 대사를 다시 과금하지 않는다.
 올린 음원은 data/audio.json에 기록하고, build_dialogues.py가 대사가 바뀌지 않은 편에만 음원을 연결한다.
 
 사용: python scripts/generate_audio.py                 (전 편 합성, audio_out/에 저장)
       python scripts/generate_audio.py P1-1 P3-2       (지정한 편만)
       python scripts/generate_audio.py --upload        (합성 후 업로드, data/audio.json 갱신)
+      python scripts/generate_audio.py --add-voices    (Voice Library 목소리를 My Voices에 추가하며 합성)
       python scripts/generate_audio.py --list-voices   (계정에서 쓸 수 있는 목소리 목록)
 """
 import hashlib
@@ -29,8 +32,53 @@ OUT = ROOT / "audio_out"
 MANIFEST = ROOT / "data" / "audio.json"
 
 
-def voice_for(unit: dict, cfg: dict = CONFIG) -> str:
-    return cfg["by_name"].get(unit.get("name", ""), cfg["voices"][unit["speaker"]])
+def voice_for(dialogue: dict, unit: dict, cfg: dict = CONFIG) -> str:
+    """대사에 쓸 목소리 이름."""
+    name = unit.get("name", "")
+    per = cfg.get("by_dialogue", {}).get(dialogue["id"], {})
+    for key in (name, unit["speaker"]):
+        if key in per:
+            return per[key]
+    return cfg["by_name"].get(name) or cfg["default"][unit["speaker"]]
+
+
+def match_voice(name: str, voices: list[dict]) -> dict | None:
+    """이름이 정확히 같으면 그것을, 아니면 이름으로 시작하는 목소리가 하나뿐일 때 그것을 고른다."""
+    exact = [v for v in voices if v["name"].casefold() == name.casefold()]
+    if exact:
+        return exact[0]
+    prefix = [v for v in voices if v["name"].casefold().startswith(name.casefold())]
+    if len(prefix) > 1:
+        raise SystemExit(f"'{name}'에 맞는 목소리가 여럿입니다: {[v['name'] for v in prefix]}. tts_voices.json에 전체 이름을 적으세요.")
+    return prefix[0] if prefix else None
+
+
+def resolve_voices(names: set[str], key: str, add: bool) -> dict:
+    """목소리 이름 → voice_id."""
+    headers = {"xi-api-key": key}
+    mine = requests.get(f"{API}/voices", headers=headers, timeout=60)
+    mine.raise_for_status()
+    mine = mine.json()["voices"]
+    ids, missing = {}, []
+    for name in sorted(names):
+        v = match_voice(name, mine)
+        if v:
+            ids[name] = v["voice_id"]; continue
+        r = requests.get(f"{API}/shared-voices", headers=headers, params={"search": name, "page_size": 30}, timeout=60)
+        r.raise_for_status()
+        shared = match_voice(name, r.json().get("voices", []))
+        if not shared:
+            missing.append(name); continue
+        if not add:
+            missing.append(f"{name}(Voice Library에 있음, --add-voices로 추가)"); continue
+        added = requests.post(f"{API}/voices/add/{shared['public_owner_id']}/{shared['voice_id']}",
+                              headers=headers, json={"new_name": shared["name"]}, timeout=60)
+        added.raise_for_status()
+        ids[name] = added.json()["voice_id"]
+        print(f"My Voices에 추가: {shared['name']}")
+    if missing:
+        raise SystemExit("목소리를 찾지 못했습니다: " + ", ".join(missing))
+    return ids
 
 
 def sample_rate(cfg: dict = CONFIG) -> int:
@@ -95,12 +143,14 @@ def main():
         raise SystemExit(f"없는 대화 ID: {sorted(only - {d['id'] for d in targets})}")
     OUT.mkdir(exist_ok=True)
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else {}
+    plan = [[voice_for(d, u) for u in d["units"]] for d in targets]
+    ids = resolve_voices({v for p in plan for v in p}, key, "--add-voices" in args)
     bucket = None
     if upload:
         from common import service_client
         bucket = service_client().storage.from_("audio")
-    for d in targets:
-        chunks = [synthesize(u["text"], voice_for(u), key) for u in d["units"]]
+    for d, names in zip(targets, plan):
+        chunks = [synthesize(u["text"], ids[v], key) for u, v in zip(d["units"], names)]
         wav = assemble(chunks, sample_rate(), CONFIG["pause_sec"])
         name = f"{d['id']}.wav"
         (OUT / name).write_bytes(wav)
