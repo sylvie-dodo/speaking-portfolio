@@ -305,6 +305,7 @@ export function showRecordScreen() {
   $("record-title").textContent = `${isExam ? `대화 ${state.current + 1} / ${state.dialogues.length}` : "모의 평가"}: ${d.title}`;
   $("record-source").textContent = d.source;
   $("btn-play-all").hidden = !d.audio;
+  $("audio-credit").hidden = !d.audio;
   $("btn-prev-dialogue").hidden = !(isExam && state.current > 0);
   $("btn-prev-dialogue").textContent = `대화 ${state.current} 녹음하기`;
   $("btn-next").textContent = (isExam && state.current < state.dialogues.length - 1) ? "다음 대화 녹음하기" : "제출 준비하기";

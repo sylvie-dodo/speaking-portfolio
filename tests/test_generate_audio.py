@@ -20,10 +20,10 @@ def test_assemble_joins_chunks_with_pauses():
 def test_voices_follow_the_chosen_cast():
     by_id = {d["id"]: d for d in DATA}
     cast = lambda did: {(u["name"] or u["speaker"]): voice_for(by_id[did], u) for u in by_id[did]["units"]}
-    assert cast("P1-1") == {"A": "Adina", "B": "Jean Petit"}
-    assert cast("P1-2") == {"A": "Adina", "B": "Guillaume"}
-    assert cast("P2-2")["Cécile"] == "Camille Martin" and cast("P2-2")["Medhi"] == "Nicolas Petit"
-    assert set(cast("P3-1").values()) == {"Paul K"} and set(cast("P3-2").values()) == {"Victoria"}
+    assert cast("P1-1") == {"A": "Alice", "B": "George"}
+    assert cast("P1-2") == {"A": "Alice", "B": "Daniel"}
+    assert cast("P2-2")["Cécile"] == "Sarah" and cast("P2-2")["Medhi"] == "Chris"
+    assert set(cast("P3-1").values()) == {"Brian"} and set(cast("P3-2").values()) == {"Lily"}
     for d in DATA:
         for u in d["units"]:
             assert voice_for(d, u)
