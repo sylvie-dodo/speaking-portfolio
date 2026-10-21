@@ -34,6 +34,9 @@
     },
     "P3-2": {
       "": "Lily"
+    },
+    "P1-1": {
+      "C": "Lily"
     }
   },
   "library_cast_for_paid_plan": {
@@ -44,6 +47,7 @@
     "Medhi": "Nicolas Petit - Radio Host",
     "P3-1": "Paul K - Deep Engaging Storyteller",
     "P3-2": "Victoria",
-    "La vendeuse": "Adina - Young, Welcoming and Joyful"
+    "La vendeuse": "Adina - Young, Welcoming and Joyful",
+    "C (P1-1)": "(여성 원어민으로 새로 고를 것)"
   }
 }

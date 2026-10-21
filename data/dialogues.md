@@ -6,7 +6,7 @@ B : Le matin, je me réveille et je déjeune, ensuite je prends ma douche et je 
 
 **A : Est-ce que le matin vous avez une routine particulière ?**
 
-B : Oui, je me lève, après c'est le téléphone, les réseaux sociaux, pour voir les actualités. Et puis, je me prépare, je me douche, c’est ma routine du matin. Je fais sortir mes chiens aussi.
+C : Oui, je me lève, après c'est le téléphone, les réseaux sociaux, pour voir les actualités. Et puis, je me prépare, je me douche, c’est ma routine du matin. Je fais sortir mes chiens aussi.
 
 **2**
 
