@@ -10,6 +10,11 @@ DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "dialogues.json"
 pytestmark = pytest.mark.skipif(not DATA_PATH.exists(), reason="data/dialogues.json 없음: scripts/build_dialogues.py 실행 필요")
 
 
+def n_expr(*ids):
+    data = {d["id"]: d for d in json.loads(DATA_PATH.read_text(encoding="utf-8"))}
+    return sum(len(data[i]["expressions"]) for i in ids)
+
+
 def make_student(folder, cls, num, name, ids, perfect=True, practice=False):
     data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
     cdir = folder / ("practice" if practice else "") / f"3-{cls:02d}"; cdir.mkdir(parents=True, exist_ok=True)
@@ -31,8 +36,8 @@ def make_student(folder, cls, num, name, ids, perfect=True, practice=False):
 
 
 def test_score_cli_writes_xlsx_and_csv(tmp_path):
-    make_student(tmp_path, 4, 1, "가나다", ["L5-1", "L6-2"])
-    make_student(tmp_path, 4, 2, "라마바", ["L5-3", "L7-1"], perfect=False)
+    make_student(tmp_path, 4, 1, "가나다", ["P1-1", "P2-1"])
+    make_student(tmp_path, 4, 2, "라마바", ["P1-3", "P2-2"], perfect=False)
     (tmp_path / "미제출_3-04.txt").write_text("03 사아자\n", encoding="utf-8")
     score.run(tmp_path, tmp_path, score.DEFAULT_CFG)
     wb = load_workbook(tmp_path / "4반 말하기 채점.xlsx")
@@ -43,19 +48,19 @@ def test_score_cli_writes_xlsx_and_csv(tmp_path):
     assert by_num[2][8] == 1             # 무음 2편 → 1, 1 → 1
     assert by_num[3][8] == 0 and by_num[3][9] == "미제출"
     csv_text = (tmp_path / "표현별 상세.csv").read_text(encoding="utf-8-sig")
-    assert csv_text.count("\n") == 1 + 40  # 헤더 + 2명 × 2편 × 10표현
+    assert csv_text.count("\n") == 1 + n_expr("P1-1", "P2-1", "P1-3", "P2-2")  # 헤더 + 2명 × 2편의 표현
 
 
 def test_practice_goes_to_csv_only(tmp_path):
-    make_student(tmp_path, 4, 5, "모의만", ["L6-2"], practice=True)
+    make_student(tmp_path, 4, 5, "모의만", ["P2-1"], practice=True)
     score.run(tmp_path, tmp_path, score.DEFAULT_CFG)
     assert not (tmp_path / "4반 말하기 채점.xlsx").exists()
     rows = (tmp_path / "표현별 상세.csv").read_text(encoding="utf-8-sig").splitlines()
-    assert len(rows) == 11 and rows[1].split(",")[3] == "모의"
+    assert len(rows) == 1 + n_expr("P2-1") and rows[1].split(",")[3] == "모의"
 
 
 def test_returned_submission_is_missing_without_stale_score(tmp_path):
-    make_student(tmp_path, 4, 1, "가나다", ["L5-1", "L6-2"])
+    make_student(tmp_path, 4, 1, "가나다", ["P1-1", "P2-1"])
     for metadata in (tmp_path / "3-04").glob("*.json"):
         if not metadata.name.endswith(".scribe.json"):
             info = json.loads(metadata.read_text(encoding="utf-8"))
@@ -87,10 +92,10 @@ def _slow_short_units(scribe_path, max_words, spacing=2.4):
 def test_note_config_adds_generous_score_to_remark(tmp_path):
     # 간격 2.4초는 기본(2.0초)에선 불만족, 후한 기준(2.5초)에선 만족이다.
     generous = {"match_ratio_min": 0.6, "max_gap_sec": 2.5, "wpm_min": 10}
-    make_student(tmp_path, 4, 5, "차카타", ["L5-1", "L6-1"])
-    make_student(tmp_path, 4, 6, "파하가", ["L5-1", "L6-1"])
-    _slow_short_units(next(tmp_path.glob("3-04/3-04-05 *_1_L5-1.scribe.json")), max_words=0)  # 변경 없음
-    _slow_short_units(next(tmp_path.glob("3-04/3-04-06 *_1_L5-1.scribe.json")), max_words=5)  # 짧은 단위 여러 개
+    make_student(tmp_path, 4, 5, "차카타", ["P1-1", "P2-2"])
+    make_student(tmp_path, 4, 6, "파하가", ["P1-1", "P2-2"])
+    _slow_short_units(next(tmp_path.glob("3-04/3-04-05 *_2_P2-2.scribe.json")), max_words=0)  # 변경 없음
+    _slow_short_units(next(tmp_path.glob("3-04/3-04-06 *_2_P2-2.scribe.json")), max_words=5)  # 짧은 단위 여러 개
     score.run(tmp_path, tmp_path, score.DEFAULT_CFG, generous)
     rows = list(load_workbook(tmp_path / "4반 말하기 채점.xlsx").active.iter_rows(values_only=True))
     hdr = rows[0]; by_num = {r[0]: dict(zip(hdr, r)) for r in rows[1:]}

@@ -1,7 +1,7 @@
 import { checkIn, resolveStudent, enterStudent, getStudentScore, downloadAudio, getClient, getTeacherDashboard, setClassOpen, getRecordingUrl, returnSubmission } from "./lib/supa.js?v=published-scores";
 import { startCapture } from "./lib/recording.js";
 import { startMicMeter } from "./lib/mic-meter.js";
-import { drawExam, drawPractice } from "./lib/draw.js";
+import { drawExam, drawPractice, partGroups } from "./lib/draw.js";
 import { mergeTracks, encodeWav } from "./lib/wav.js";
 
 export const state = {
@@ -99,7 +99,7 @@ function renderScore(result, score) {
     if (score.note) line(score.note);
     score.dialogues.forEach((dialogue, index) => {
       line(`${index + 1}번째 대화: ${dialogue.title}`, "h3");
-      line(`점수: ${dialogue.score}점, 통과한 표현: ${dialogue.passed}개 (10개 중)`);
+      line(`점수: ${dialogue.score}점, 통과한 표현: ${dialogue.passed}개${dialogue.total ? ` (${dialogue.total}개 중)` : ""}`);
       if (dialogue.missed) line(`기준에 못 미친 표현 번호: ${dialogue.missed}`);
     });
     if (score.final_score === null && !score.note) line("점수 확인 대기 중입니다.");
@@ -173,7 +173,7 @@ async function chooseMode(mode, button = $(mode === "exam" ? "btn-exam" : "btn-p
     state.built = null;
     $("btn-mic-next").disabled = true;
     if (mode === "exam") {
-      const [a, b] = await drawExam(state.cls, state.num, DIALOGUES.length);
+      const [a, b] = await drawExam(state.cls, state.num, partGroups(DIALOGUES));
       if (version !== sessionVersion) return;
       state.dialogues = [DIALOGUES[a], DIALOGUES[b]];
     } else {
@@ -304,6 +304,7 @@ export function showRecordScreen() {
   stopUnitPlayback();
   $("record-title").textContent = `${isExam ? `대화 ${state.current + 1} / 2` : "모의 평가"}: ${d.title}`;
   $("record-source").textContent = d.source;
+  $("btn-play-all").hidden = !d.audio;
   $("btn-prev-dialogue").hidden = !(isExam && state.current === 1);
   $("btn-next").textContent = (isExam && state.current === 0) ? "다음 대화 녹음하기" : "제출 준비하기";
   state.recordings[state.current] = state.recordings[state.current] || {};
@@ -323,8 +324,12 @@ function renderUnits() {
     text.id = `unit-text-${i}`;
     text.className = "dialogue-text";
     text.dataset.speaker = u.speaker;
-    text.textContent = u.text;
     text.lang = "fr";
+    if (u.name) {
+      const who = document.createElement("span"); who.className = "speaker"; who.textContent = `${u.name} : `;
+      text.append(who);
+    }
+    text.append(u.text);
     const mk = (label, action, disabled) => {
       const b = document.createElement("button");
       b.type = "button"; b.textContent = label; b.dataset.action = action; b.disabled = disabled;

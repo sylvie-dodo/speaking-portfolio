@@ -17,7 +17,7 @@ from scoring import DEFAULT_CFG, final_score, score_dialogue
 from transcribe import cached_transcript
 
 ROOT = Path(__file__).resolve().parents[1]
-STEM_RE = re.compile(r"^3-(\d\d)-(\d\d) (.+)_([^_]+)_(L\d-\d)$")
+STEM_RE = re.compile(r"^3-(\d\d)-(\d\d) (.+)_([^_]+)_([A-Z]\d-\d+)$")
 
 
 @cache

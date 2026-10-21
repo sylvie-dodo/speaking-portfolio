@@ -22,6 +22,8 @@ fieldset label { display:inline-flex; align-items:center; min-width:44px; min-he
 .units .dialogue-text { display:block; margin:0 0 12px; padding:12px; border-inline-start:6px solid #767676; background:#f5f5f5; color:var(--fg); }
 .units .dialogue-text[data-speaker=A] { border-color:#153e75; background:#eff6ff; color:#153e75; }
 .units .dialogue-text[data-speaker=B] { border-color:#702459; border-inline-start-style:double; background:#fdf2f8; color:#702459; }
+.units .dialogue-text[data-speaker=C] { border-color:#22543d; border-inline-start-style:dashed; background:#f0fff4; color:#22543d; }
+.units .dialogue-text .speaker { font-weight:bold; }
 .units .status { color:var(--muted); display:block; margin-top:6px; }
 .units li.recording { border-color:var(--err); }
 .units li.recorded { border-color:var(--ok); }

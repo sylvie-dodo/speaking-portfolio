@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { JSDOM } from "jsdom";
 import { mergeTracks, encodeWav } from "../../lib/wav.js";
 import { startCapture } from "../../lib/recording.js";
+import { partGroups } from "../../lib/draw.js";
 
 const html = await readFile(new URL("../../index.html", import.meta.url), "utf8");
 const dialogues = JSON.parse(await readFile(new URL("../../data/dialogues.json", import.meta.url), "utf8"));
@@ -31,7 +32,7 @@ function app(t, overrides = {}) {
   w.HTMLMediaElement.prototype.pause = function () {};
   w.HTMLMediaElement.prototype.play = async function () {};
   Object.assign(w, {
-    mergeTracks, encodeWav,
+    mergeTracks, encodeWav, partGroups,
     resolveStudent: async () => ({ class: 1, number: 16 }),
     startCapture: (stream, handlers) => startCapture(stream, handlers, w.MediaRecorder),
     startMicMeter: () => () => {},

@@ -157,15 +157,15 @@ def score_dialogue(dialogue: dict, scribe: dict, turn_offsets: list, cfg: dict) 
                             "wpm": (round(wpm, 1) if wpm is not None else None), "ok": reason == "", "reason": reason})
     results.sort(key=lambda r: r["n"])
     satisfied = sum(1 for r in results if r["ok"])
-    return {"satisfied": satisfied, "score": dialogue_score(satisfied), "expressions": results}
+    return {"satisfied": satisfied, "total": len(results), "score": dialogue_score(satisfied, len(results)),
+            "expressions": results}
 
 
-def dialogue_score(satisfied: int) -> int:
-    if satisfied >= 9:
-        return 10
-    if satisfied >= 1:
-        return satisfied + 1
-    return 1
+def dialogue_score(satisfied: int, total: int = 10) -> int:
+    """통과 비율로 1~10점. 표현 10개일 때 원작 점수표(9개 이상 10점, 그 아래 개수+1점)와 같다."""
+    if total <= 0:
+        return 1
+    return min(10, 1 + (10 * satisfied) // total)
 
 
 def final_score(scores: list[int]) -> int:

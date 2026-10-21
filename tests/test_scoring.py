@@ -23,10 +23,12 @@ def words_from(text_units, offsets, wpm=120):
     return {"text": " ".join(text_units), "words": words}
 
 
-def offsets_for(d, unit_sec=12.0, gap=0.5):
+def offsets_for(d, unit_sec=12.0, gap=0.5, wpm=120):
+    """단위 창은 unit_sec 이상, 긴 대사는 wpm 속도로 다 읽을 만큼 늘린다."""
     out, t = [], 0.0
     for u in d["units"]:
-        out.append({"turn": u["n"], "start": t, "end": t + unit_sec}); t += unit_sec + gap
+        sec = max(unit_sec, len(u["text"].split()) * 60 / wpm + 1)
+        out.append({"turn": u["n"], "start": t, "end": t + sec}); t += sec + gap
     return out
 
 
@@ -67,13 +69,17 @@ def test_align_substitution_and_deletion():
     assert sorted(ref_idx) == [0, 1, 2, 3]
 
 
+def by_unit(d, unit_n):
+    return [e for e in d["expressions"] if e["unit"] == unit_n]
+
+
 @needs_data
 def test_perfect_reading_scores_ten():
-    d = BY_ID["L5-3"]
+    d = BY_ID["P1-1"]
     offs = offsets_for(d)
     scribe = words_from([u["text"] for u in d["units"]], offs)
     r = score_dialogue(d, scribe, offs, DEFAULT_CFG)
-    assert r["satisfied"] == 10 and r["score"] == 10
+    assert r["satisfied"] == r["total"] == len(d["expressions"]) and r["score"] == 10
     assert all(e["ok"] for e in r["expressions"])
 
 
@@ -82,58 +88,63 @@ def test_every_dialogue_perfect_reading_scores_ten():
     for d in BY_ID.values():
         offs = offsets_for(d)
         r = score_dialogue(d, words_from([u["text"] for u in d["units"]], offs), offs, DEFAULT_CFG)
-        assert r["satisfied"] == 10, (d["id"], [e for e in r["expressions"] if not e["ok"]])
+        assert r["satisfied"] == r["total"] and r["score"] == 10, (d["id"], [e for e in r["expressions"] if not e["ok"]])
 
 
 @needs_data
-def test_one_unit_silent_gives_nine():
-    d = BY_ID["L5-3"]
+def test_one_silent_unit_fails_only_its_expressions():
+    d = BY_ID["P1-1"]
     offs = offsets_for(d)
     texts = [u["text"] for u in d["units"]]
     texts[2] = ""
     r = score_dialogue(d, words_from(texts, offs), offs, DEFAULT_CFG)
-    assert r["satisfied"] == 9 and r["score"] == 10
-    assert r["expressions"][2]["ok"] is False and r["expressions"][2]["reason"] == "no_words"
+    silent = {e["n"] for e in by_unit(d, 3)}
+    assert {e["n"] for e in r["expressions"] if not e["ok"]} == silent
+    assert all(e["reason"] == "no_words" for e in r["expressions"] if e["n"] in silent)
+    assert r["score"] == dialogue_score(r["total"] - len(silent), r["total"])
 
 
 @needs_data
 def test_split_expressions_scored_separately():
-    d = BY_ID["L7-2"]  # 단위 2가 표현 2개로 나뉨
+    d = BY_ID["P1-1"]  # 단위 1이 문장 2개로 나뉨
+    first, second = by_unit(d, 1)
     offs = offsets_for(d)
     texts = [u["text"] for u in d["units"]]
-    texts[1] = "I'm going to go hiking."  # 뒷 문장 누락
+    texts[0] = first["text"]  # 뒷 문장 누락
     r = score_dialogue(d, words_from(texts, offs), offs, DEFAULT_CFG)
-    ok = [e["ok"] for e in r["expressions"]]
-    assert ok[1] is True and ok[2] is False and sum(ok) == 9
+    ok = {e["n"]: e["ok"] for e in r["expressions"]}
+    assert ok[first["n"]] is True and ok[second["n"]] is False and r["satisfied"] == r["total"] - 1
 
 
 @needs_data
 def test_long_pause_fails_fluency():
-    d = BY_ID["L6-1"]
+    d = BY_ID["P1-1"]
+    target = by_unit(d, 2)[0]
     offs = offsets_for(d)
     scribe = words_from([u["text"] for u in d["units"]], offs)
-    # 단위 5의 셋째 단어부터 3개를 3초 뒤로 민다
-    idx = [i for i, w in enumerate(scribe["words"]) if w["start"] >= offs[4]["start"]][2]
+    # 단위 2의 셋째 단어부터 3개를 3초 뒤로 민다
+    idx = [i for i, w in enumerate(scribe["words"]) if w["start"] >= offs[1]["start"]][2]
     for w in scribe["words"][idx:idx + 3]:
         w["start"] += 3.0; w["end"] += 3.0
     r = score_dialogue(d, scribe, offs, DEFAULT_CFG)
-    assert r["expressions"][4]["ok"] is False and r["expressions"][4]["reason"] == "max_gap"
+    hit = next(e for e in r["expressions"] if e["n"] == target["n"])
+    assert hit["ok"] is False and hit["reason"] == "max_gap"
 
 
 @needs_data
 def test_gap_between_units_not_counted():
-    d = BY_ID["L5-3"]
+    d = BY_ID["P1-1"]
     offs = offsets_for(d, gap=5.0)  # 단위 사이 5초
     r = score_dialogue(d, words_from([u["text"] for u in d["units"]], offs), offs, DEFAULT_CFG)
-    assert r["satisfied"] == 10
+    assert r["satisfied"] == r["total"]
 
 
 @needs_data
 def test_slow_speech_fails_wpm():
-    # L6-2의 9번 "Great."처럼 한 단어 표현은 WPM을 잴 수 없어 일치만으로 만족 처리되므로 두 단어 이상인 편을 쓴다.
-    d = BY_ID["L5-1"]
-    assert all(len(e["text"].split()) >= 2 for e in d["expressions"])
-    offs = offsets_for(d, unit_sec=60.0)
+    # 한 단어 표현은 WPM을 잴 수 없어 일치만으로 만족 처리되므로 모든 표현이 여러 단어인 편을 쓴다.
+    d = BY_ID["P1-1"]
+    assert all(len(e["text"].split()) >= 3 for e in d["expressions"])
+    offs = offsets_for(d, unit_sec=60.0, wpm=30)
     scribe = words_from([u["text"] for u in d["units"]], offs, wpm=30)
     r = score_dialogue(d, scribe, offs, DEFAULT_CFG)
     assert r["satisfied"] == 0 and r["score"] == 1
@@ -142,18 +153,19 @@ def test_slow_speech_fails_wpm():
 
 @needs_data
 def test_one_word_expression_satisfied_by_match_alone():
-    d = BY_ID["L6-2"]
-    one = [e for e in d["expressions"] if len(e["text"].split()) == 1]
-    assert [e["text"] for e in one] == ["Great."]
-    offs = offsets_for(d, unit_sec=60.0)
+    d = BY_ID["P2-2"]
+    one = [e for e in d["expressions"] if len(canonical(e["text"])) == 1]
+    assert one, "한 단어 표현이 있는 편이어야 한다"
+    offs = offsets_for(d, unit_sec=60.0, wpm=30)
     r = score_dialogue(d, words_from([u["text"] for u in d["units"]], offs, wpm=30), offs, DEFAULT_CFG)
-    hit = next(x for x in r["expressions"] if x["n"] == one[0]["n"])
-    assert hit["ok"] and hit["wpm"] is None and r["satisfied"] == 1
+    hits = {x["n"]: x for x in r["expressions"]}
+    for e in one:
+        assert hits[e["n"]]["ok"] and hits[e["n"]]["wpm"] is None, e["text"]
 
 
 @needs_data
 def test_empty_transcript_scores_one():
-    d = BY_ID["L5-1"]
+    d = BY_ID["P1-1"]
     r = score_dialogue(d, {"text": "", "words": []}, offsets_for(d), DEFAULT_CFG)
     assert r["satisfied"] == 0 and r["score"] == 1
 
@@ -170,6 +182,12 @@ def test_numbers_as_digits_or_words_both_match():
 @pytest.mark.parametrize("n,s", [(10, 10), (9, 10), (8, 9), (5, 6), (1, 2), (0, 1)])
 def test_dialogue_score_table(n, s):
     assert dialogue_score(n) == s
+
+
+@pytest.mark.parametrize("n,total,s", [(7, 7, 10), (6, 7, 9), (4, 7, 6), (1, 7, 2), (0, 7, 1),
+                                        (17, 17, 10), (16, 17, 10), (15, 17, 9), (0, 0, 1)])
+def test_dialogue_score_scales_with_expression_count(n, total, s):
+    assert dialogue_score(n, total) == s
 
 
 @pytest.mark.parametrize("scores,final", [([10, 9], 10), ([9, 8], 9), ([8, 7], 8), ([1, 1], 1), ([10, 0], 5), ([0, 0], 0)])

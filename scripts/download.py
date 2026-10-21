@@ -9,7 +9,7 @@ from pathlib import Path
 
 from common import service_client
 
-PATH_RE = re.compile(r"^(exam|practice)/3-(\d\d)/3-\d\d-(\d\d)/(?:[^/]+/)?(?:(\d)_)?(?:[^_]+_)?(L\d-\d)\.wav$")
+PATH_RE = re.compile(r"^(exam|practice)/3-(\d\d)/3-\d\d-(\d\d)/(?:[^/]+/)?(?:(\d)_)?(?:[^_]+_)?([A-Z]\d-\d+)\.wav$")
 
 
 def local_stem(cls, num, name, idx, dialogue_id):
